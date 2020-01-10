@@ -1,20 +1,20 @@
 library(shiny)
 
 fluidPage(
-  titlePanel("NYC Flights 2014"),
+  titlePanel("Airbnb in NYC 2019"),
   sidebarLayout(
     sidebarPanel(
-      selectizeInput(inputId = "origin",
-                     label = "Departure airport",
-                     choices = unique(flights[, 'origin'])),
-      selectizeInput(inputId = "dest",
-                     label = "Arrival airport",
-                     choices = unique(flights[, 'dest']))
+      selectizeInput(inputId = "neighbourhood",
+                     label = "Neighbourhood",
+                     choices = unique(bnb[, 'neighbourhood'])),
+      selectizeInput(inputId = "room_type",
+                     label = "Room Type",
+                     choices = unique(bnb[, 'room_type']))
     ),
     mainPanel(
       fluidRow(
-        column(6, plotOutput("count")),
-        column(6, plotOutput("delay"))
+        column(6, plotOutput("px")),
+        column(6, plotOutput("review"))
       )
     )
   )

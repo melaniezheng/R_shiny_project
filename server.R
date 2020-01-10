@@ -6,36 +6,36 @@ library(ggplot2)
 function(input, output, session) {
   
   observe({
-    dest <- unique(flights %>%
-                     filter(flights$origin == input$origin) %>%
-                     .$dest)
+    roomtype <- unique(bnb %>%
+                     filter(bnb$neighbourhood == input$neighbourhood) %>%
+                     .$room_type)
     updateSelectizeInput(
-      session, "dest",
-      choices = dest,
-      selected = dest[1])
+      session, "room_type",
+      choices = room_type,
+      selected = room_type[1])
   })
   
-  flights_delay <- reactive({
-    flights %>%
-      filter(origin == input$origin & dest == input$dest) %>%
-      group_by(carrier) %>%
+  bnb_price_reviews <- reactive({
+    bnb %>%
+      filter(neighbourhood == input$neighbourhood & room_type == input$room_type) %>%
+      group_by(neighbourhood, room_type) %>%
       summarise(n = n(),
-                departure = mean(dep_delay),
-                arrival = mean(arr_delay))
+                px = mean(price),
+                reviews_count  = mean(number_of_reviews))
   })
 
-  output$delay <- renderPlot(
-    flights_delay() %>%
-      gather(key = type, value = delay, departure, arrival) %>%
-      ggplot(aes(x = carrier, y = delay, fill = type)) +
+  output$px <- renderPlot(
+    bnb_price_reviews () %>%
+      gather(key = room_type, value = px, neighbourhood, room_type) %>%
+      ggplot(aes(x = neighbourhood, y = px, fill = room_type)) +
       geom_col(position = "dodge") +
-      ggtitle("Average delay")
+      ggtitle("Average Price")
   )
 
-  output$count <- renderPlot(
-    flights_delay() %>%
-      ggplot(aes(x = carrier, y = n)) +
+  output$review <- renderPlot(
+    bnb_price_reviews() %>%
+      ggplot(aes(x = neighbourhood, y = n)) +
       geom_col(fill = "lightblue") +
-      ggtitle("Number of flights")
+      ggtitle("Number of listings")
   )
 }
