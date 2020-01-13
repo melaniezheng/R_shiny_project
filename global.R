@@ -3,24 +3,34 @@ library(dplyr)
 library(ggplot2)
 library(googleVis)
 
-data <- fread(file = "US_Accidents_May19.csv")
+data <- fread(file = "~/NYCDSA/R_shiny_project/US_Accidents_May19.csv", stringsAsFactors = FALSE)
 #population data per state
-#each state, location of accident
+population <- fread(file= "~/NYCDSA/R_shiny_project/US_Population_2019_Jul.csv", header = TRUE, stringsAsFactors = FALSE)
+
+colnames(population)=c("StateName","State","Population")
+population <- population[-1,]
+population$Population=as.integer(population$Population)
+kPopulation <- sum(population$Population)
 
 
 my_data <- data %>%  
-  mutate(.,year=substr(Start_Time,1,4), month=month.abb[as.integer(substr(Start_Time,6,7))]) 
-my_data$month <- factor(my_data$month, levels = month.abb, ordered = T)
+  left_join(., population, by="State") %>% 
+  mutate(.,year=substr(Start_Time,1,4), month=factor(month.abb[as.integer(substr(Start_Time,6,7))], levels=month.abb, ordered = T))
 
-
+# monthly average accident count and average accident % in proportion to the population (ideally 
+# in proportion to the number of drivers would make much more sense)
 data1 <- my_data %>% 
-  group_by(.,year, month) %>% summarise(.,count_per_month=n()) %>% 
-  left_join(.,my_data %>% group_by(.,year) %>% summarise(., count_per_year=n()),by="year") %>% 
-  mutate(.,perc.mon.accident=count_per_month/count_per_year) %>% 
-  group_by(.,month) %>% summarise(., mon.average=round(mean(count_per_month)))
+  group_by(.,year, month) %>% summarise(., count.each.month=n()) %>% 
+  group_by(.,month) %>% summarise(., count.avg.month=round(mean(count.each.month))) %>% 
+  mutate(., proportion = count.avg.month/kPopulation)
 
 data2 <- my_data %>% 
   group_by(.,State) %>% summarise(.,Count=n()) 
+
+data_2 <- my_data %>% 
+  group_by(.,State) %>% summarise(.,count.accident=n()) %>% 
+  left_join(.,population,by="State") %>% 
+  mutate(.,proportion=count.accident/Population)
 
 data_byState <- my_data %>% 
   group_by(.,State,County) %>% summarise(.,Count=n())
@@ -28,7 +38,6 @@ data_byState <- my_data %>%
 data_byZipcode <- my_data %>% 
   filter(., !is.na(`Precipitation(in)`)) %>% group_by(., Zipcode) %>% 
   summarise(., avg.precipitation=mean(`Precipitation(in)`), accident.count=n())
-
 
 
 data3 <- my_data %>% select(.,State,Amenity,Bump,Crossing,Give_Way,Junction,No_Exit,Railway,Roundabout,Station,Stop) %>% 

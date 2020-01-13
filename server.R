@@ -5,6 +5,9 @@ library(ggplot2)
 library(googleVis)
 
 shinyServer(function(input, output) {
+  output$linkedin <- renderUI({
+    tags$a(imageOutput("linkedin.png"),href="https://www.linkedin.com/in/melanie-zheng-56ab7856/")
+  })
   
   react_data_State <- reactive({
     my_data %>%
@@ -21,8 +24,16 @@ shinyServer(function(input, output) {
         ggtitle("Number of Accidents")
   })
   
+  react_data_State <- reactive({
+    my_data %>%
+      filter(.,State == input$State) %>% 
+      group_by(.,year, month) %>% summarise(.,count_per_month=n()) %>% 
+      group_by(.,month) %>% summarise(., Average=round(mean(count_per_month)))
+  })
+  
   output$gvis2 <- renderGvis({
-    gvisPieChart(data1, options=list(width=500, height=550, title="Average Monthly Car Accidents (in %)"))
+    gvisPieChart(data1 %>% select(.,month,count.avg.month), 
+                 options=list(width=500, height=550, title="Average Monthly Car Accidents (in %)"))
   })
   
   output$gvis3 <- renderGvis({
@@ -48,12 +59,29 @@ shinyServer(function(input, output) {
         region = "US",
         displayMode = "regions",
         resolution = "provinces",
+        colors="['red']",
         width = 1000,
         height = 600
       )
     )
   })
 
+  output$USmap1 <- renderGvis({
+    gvisGeoChart(
+      data_2,
+      "State",
+      "proportion",
+      options = list(
+        title= "Hover over each state to see more details",
+        region = "US",
+        displayMode = "regions",
+        resolution = "provinces",
+        colors="['red']",
+        width = 1000,
+        height = 600
+      )
+    )
+  })
   
   output$plot4 <- renderGvis({
     gvisColumnChart(

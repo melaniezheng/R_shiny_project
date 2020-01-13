@@ -6,7 +6,9 @@ library(shinydashboardPlus)
 fluidPage(
   theme=shinytheme("cosmo"),
   navbarPage(
-    title="Car Accident Analysis",
+    #title = "Car Accidents Analysis",
+    title = div(img(src = "linkedin.png", height = "100px", 
+                    style = "position: relative; top: -40px; right: -1100px;"), "Car Accidents Analysis"),
   tabPanel("Overview", 
            fluidRow(column(8, htmlOutput("USmap")),
                     column(4, 
@@ -14,6 +16,11 @@ fluidPage(
                            h3("The data is gathered from US car accidents from Februrary 2016 to March 2019."),
                            htmlOutput("gvis2"))
            )), 
+  tabPanel("in Proportion",
+           fluidRow(column(8, htmlOutput("USmap1")),
+                    column(4,
+                           h1("Accident number in proportion to the population"))
+                    )),
   tabPanel("by State", 
            fluidRow(
              column(3,
