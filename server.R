@@ -25,7 +25,7 @@ shinyServer(function(input, output) {
     )
   })
   output$plot2 <- renderGvis({
-    gvisPieChart(data1, options=list(width=400, height=400))
+    gvisPieChart(data1, options=list(width=500, height=550, title="Average Monthly Car Accidents(in %)"))
   })
   output$plot3 <- renderGvis({
     gvisColumnChart(
