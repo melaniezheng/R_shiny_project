@@ -5,29 +5,27 @@ library(ggplot2)
 library(googleVis)
 
 shinyServer(function(input, output) {
-  output$plot1 <- renderGvis({
-    gvisColumnChart(
-      my_data %>% 
-        filter(.,State=="CA") %>% 
-        group_by(.,year, month) %>% 
-        summarise(.,count_per_month=n()) %>% 
-        left_join(.,my_data %>% group_by(.,year) %>% summarise(., count_per_year=n()),by="year") %>% 
-        mutate(.,perc.mon.accident=count_per_month/count_per_year) %>% 
-        group_by(.,month) %>% 
-        summarise(., mon.average=round(mean(count_per_month))),
-      options = list(
-        legend='none',
-        width = 1100,
-        height = 600,
-        axisTitlesPosition = "none",
-        Title = "Average Monthly Car Accident (2016-2019)"
-      )
-    )
+  
+  react_data_State <- reactive({
+    my_data %>%
+      filter(.,State == input$State) %>% 
+      group_by(.,year, month) %>% summarise(.,count_per_month=n()) %>% 
+      group_by(.,month) %>% summarise(., Average=round(mean(count_per_month)))
   })
-  output$plot2 <- renderGvis({
-    gvisPieChart(data1, options=list(width=500, height=550, title="Average Monthly Car Accidents(in %)"))
+  
+  output$plot1 <- renderPlot({
+        ggplot(data = react_data_State(), aes(x=month, y=Average)) +
+        geom_col(position="dodge", fill = "#FF6666", width = 0.4) +
+        xlab("Month") +
+        ylab("")+
+        ggtitle("Number of Accidents")
   })
-  output$plot3 <- renderGvis({
+  
+  output$gvis2 <- renderGvis({
+    gvisPieChart(data1, options=list(width=500, height=550, title="Average Monthly Car Accidents (in %)"))
+  })
+  
+  output$gvis3 <- renderGvis({
     gvisColumnChart(
       data2,
       options = list(
@@ -85,5 +83,9 @@ shinyServer(function(input, output) {
       )
     )
   })
+  output$precipitation <- renderPlot({
+    ggplot(data_byZipcode, aes(avg.precipitation, accident.count)) + geom_line(stat="identity")
+  })
+  
   
 })

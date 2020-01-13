@@ -38,17 +38,35 @@ data1
 
 
 
-#tabPanel("by State",
-        # sidebarLayout(
-        # sidebarPanel(
-       #  selectizeInput(inputId = "State",label = "Select a state",choices = unique(data_byState[, 'State']))
-       #  ),
-       #  mainPanel(
-      #   htmlOutput("plot1")
-         #    )
-         #  )
-         #fluidRow(column(2, selectizeInput(inputId = "State",
-         #      label = "Select a state",
-         #      choices = unique(data_byState[, 'State']))),
-         #  column(10, htmlOutput("plot1"))
-         #)
+tabPanel("by State", 
+         fluidRow(
+           boxPlus(
+             width = 12,
+             title = "Select a state", 
+             closable = TRUE, 
+             status = "warning", 
+             solidHeader = FALSE, 
+             collapsible = TRUE,
+             enable_sidebar = TRUE,
+             sidebar_width = 30,
+             sidebar_start_open = TRUE,
+             sidebar_content = tagList(
+               selectizeInput(inputId = "State",label = "Select a state",choices = unique(data_byState[, 'State']))
+             ),
+             plotOutput("precipitation")
+           )),
+         fluidRow(
+           column(3, 
+                  h3("Select a state."),
+                  h3("Selectize Input."),
+                  h3("Top 3 Counties with highest car accident count"),
+                  h3("Monthly Average per State vs Visibility(mi) Average"),
+                  h3("Monthly Average per State vs Wind Speed(mph) Average"),
+                  h3("Monthly Average per State vs per Wind Direction"),
+                  h3("Monthly Average per State vs Precipitation(in) Average"),
+                  h3("Monthly Average per State vs Humidity(%) Average"),
+                  h3("Monthly Average per State vs Pressure(in) Average"),
+                  h3("Monthly Average per State vs Temperature Average")),
+           column(9, htmlOutput("plot1"))
+         )
+),

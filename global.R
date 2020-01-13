@@ -14,21 +14,22 @@ my_data$month <- factor(my_data$month, levels = month.abb, ordered = T)
 
 
 data1 <- my_data %>% 
-  group_by(.,year, month) %>% 
-  summarise(.,count_per_month=n()) %>% 
+  group_by(.,year, month) %>% summarise(.,count_per_month=n()) %>% 
   left_join(.,my_data %>% group_by(.,year) %>% summarise(., count_per_year=n()),by="year") %>% 
   mutate(.,perc.mon.accident=count_per_month/count_per_year) %>% 
-  group_by(.,month) %>% 
-  summarise(., mon.average=round(mean(count_per_month)))
-#data1
+  group_by(.,month) %>% summarise(., mon.average=round(mean(count_per_month)))
 
 data2 <- my_data %>% 
-  group_by(.,State) %>% 
-  summarise(.,Count=n()) 
+  group_by(.,State) %>% summarise(.,Count=n()) 
 
 data_byState <- my_data %>% 
-  group_by(.,State,County) %>% 
-  summarise(.,Count=n())
+  group_by(.,State,County) %>% summarise(.,Count=n())
+
+data_byZipcode <- my_data %>% 
+  filter(., !is.na(`Precipitation(in)`)) %>% group_by(., Zipcode) %>% 
+  summarise(., avg.precipitation=mean(`Precipitation(in)`), accident.count=n())
+
+
 
 data3 <- my_data %>% select(.,State,Amenity,Bump,Crossing,Give_Way,Junction,No_Exit,Railway,Roundabout,Station,Stop) %>% 
   filter(.,State=="CA") %>% 
