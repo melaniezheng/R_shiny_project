@@ -1,21 +1,46 @@
 library(shiny)
+library(googleVis)
+library(shinythemes)
 
 fluidPage(
-  titlePanel("Airbnb in NYC 2019"),
-  sidebarLayout(
-    sidebarPanel(
-      selectizeInput(inputId = "neighbourhood",
-                     label = "Neighbourhood",
-                     choices = unique(bnb[, 'neighbourhood'])),
-      selectizeInput(inputId = "room_type",
-                     label = "Room Type",
-                     choices = unique(bnb[, 'room_type']))
-    ),
-    mainPanel(
-      fluidRow(
-        column(6, plotOutput("px")),
-        column(6, plotOutput("review"))
-      )
-    )
+  theme=shinytheme("cosmo"),
+  navbarPage(
+    title="Car Accident Analysis",
+  tabPanel("Overview", 
+           fluidRow(column(8, htmlOutput("USmap")),
+                    column(4, 
+                           h1("US Car Accident Analysis"),
+                           h3("The data is gathered from US car accidents from Februrary 2016 to March 2019."))
+           )), 
+  tabPanel("by State", 
+           htmlOutput("plot1")
+           ),
+  navbarMenu(
+    "Interesting Findings",
+    tabPanel("Wind Speed"
+             ),
+    tabPanel("Visibility",
+             htmlOutput("visibility")
+             ),
+    tabPanel("..."
+             )
+  ),
+  navbarMenu(
+    "More",
+    tabPanel("Data Source", "to fill in"
+             ),
+    tabPanel("About me", htmlOutput("plot4")
+             ),
+    tabPanel("...")
   )
-)
+  #mainPanel(fluidRow(
+    #column(12,
+           #"Monthly Accident Data",
+          # fluidRow(
+           #  column(9,
+            #        htmlOutput("plot1")),
+           #  column(3,
+          #          htmlOutput("plot2"))
+         #  ))
+ # ))
+))
