@@ -24,11 +24,6 @@ shinyServer(function(input, output) {
         ggtitle("Number of Accidents")
   })
   
-  #changed
-  map_data <- reactive({
-    ifelse(input$map)
-      
-  })
   
   react_data_State <- reactive({
     my_data %>%

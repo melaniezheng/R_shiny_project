@@ -30,18 +30,23 @@ fluidPage(
                                         selected = "Count"),
                            h5("Hover over the map to see more detail."))
                     )), 
-  tabPanel("in Proportion",
-           fluidRow(column(8, h2("TBD")),
-                    column(4,
-                           h1("Accident number in proportion to the population"))
-                    )),
-  tabPanel("by State", 
+  tabPanel("Explore", 
            fluidRow(
              column(3,
+                    h3("Which month does your state have the most accidents?"),
                     selectizeInput(inputId = "State",label = "Select a state",choices = unique(data_byState[, 'State']))),
              column(9,
+                    h3("Maybe add the national average for comparison.."),
                     plotOutput("plot1"))
                ),
+           fluidRow(
+             column(3,
+                    h3("options...")),
+             column(9,
+                    radioButtons("day_night", label = h3(strong("Day/Night")),
+                                 choices = list("Day" = "day","Night" = "night"),
+                                 selected = "day"),
+                    )),
            fluidRow(
              column(3, 
                     h3("Top 3 Counties with highest car accident count"),
@@ -52,8 +57,7 @@ fluidPage(
                     h3("Monthly Average per State vs Humidity(%) Average"),
                     h3("Monthly Average per State vs Pressure(in) Average"),
                     h3("Monthly Average per State vs Temperature Average")),
-             column(9, plotOutput("precipitation"))
-           )
+             column(9, plotOutput("precipitation")))
            ),
   navbarMenu(
     "Interesting Findings",
