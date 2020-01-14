@@ -33,6 +33,12 @@ shinyServer(function(input, output, session) {
         ggtitle("Number of Accidents")
   })
   
+  output$headmap <- renderPlot({
+    ggplot(my_data) + 
+      geom_bin2d(aes(var1,var2), na.rm =T) +
+      scale_fill_gradient(low="#FCC8C5", high="#D10C00")
+  })
+  
   output$gvis2 <- renderGvis({
     gvisPieChart(data1 %>% select(.,month,count.avg.month), 
                  options=list(width=500, height=550, title="Average Monthly Car Accidents (in %)"))
@@ -62,7 +68,6 @@ shinyServer(function(input, output, session) {
   output$visibility <- renderGvis({
     gvisColumnChart(
       data_visibility,
-      
       options = list(
         title="Count of Accidents vs Visibility(in miles)",
         width = "1000",
