@@ -55,18 +55,14 @@ shinyServer(function(input, output) {
     )
   })
   
+  
   output$USmap <- renderGvis({
     gvisGeoChart(
-      data2,"State","Count",
+      data_2,"State",input$map,
       options = list(region = "US",displayMode = "regions",
                      resolution = "provinces",colors="['red']",width = 1000,height = 600))
   })
 
-  output$USmap1 <- renderGvis({
-    gvisGeoChart(
-      data_2,"State","proportion",
-      options = list(region = "US",displayMode = "regions",resolution = "provinces",colors="['red']",width = 1000,height = 600))
-  })
   
   output$plot4 <- renderGvis({
     gvisColumnChart(

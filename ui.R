@@ -9,10 +9,10 @@ fluidPage(
     tags$style(HTML("
           .navbar .navbar-nav {float: left}
         ")),
-    tags$script(HTML("var header = $('.navbar > .navbar-nav');
-    header.append('<div style=\"float:right\"><a href=\"https://www.linkedin.com/in/melanie-zheng/\"><img src=\"linkedin.png\" alt=\"alt\" style=\"position:relative;top:-40px;right:-1100px;\"> </a>`</div>');
-    console.log(header)")
-    ),
+    #tags$script(HTML("var header = $('.navbar > .navbar-nav');
+    #header.append('<div style=\"float:right\"><a href=\"https://www.linkedin.com/in/melanie-zheng/\"><img src=\"linkedin.png\" alt=\"alt\" style=\"position:relative;top:-40px;right:-1100px;\"> </a>`</div>');
+    #console.log(header)")
+    #),
   ),
   navbarPage(
     title = "US Car Accidents",
@@ -20,18 +20,18 @@ fluidPage(
     id= "nav",
   tabPanel("Overview", 
            fluidRow(column(8, 
-                           h3("Hover over the map to see more detail."),
+                           h2(strong("The Map View")),
+                           h4("The data is gathered from US car accidents from Februrary 2016 to March 2019."),
                            htmlOutput("USmap")),
                     column(4, 
-                           h1("US Car Accident Analysis"),
-                           h3("The data is gathered from US car accidents from Februrary 2016 to March 2019."),
-                           radioButtons("map", label = h3("Display map by: "),
+                           radioButtons("map", label = h3(strong("Display map by: ")),
                                         choices = list("Count of Accidents" = "Count",
-                                                       "Accidents/Population" = "proportion"),
-                                        selected = "Count"))
+                                                       "Accidents/Population (in %)" = "proportion"),
+                                        selected = "Count"),
+                           h5("Hover over the map to see more detail."))
                     )), 
   tabPanel("in Proportion",
-           fluidRow(column(8, htmlOutput("USmap1")),
+           fluidRow(column(8, h2("TBD")),
                     column(4,
                            h1("Accident number in proportion to the population"))
                     )),

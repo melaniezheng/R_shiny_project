@@ -30,9 +30,9 @@ data2 <- my_data %>%
 
 # accident in proportion to state population.
 data_2 <- my_data %>% 
-  group_by(.,State) %>% summarise(.,count.accident=n()) %>% 
+  group_by(.,State) %>% summarise(.,Count=n()) %>% 
   left_join(.,population,by="State") %>% 
-  mutate(.,proportion=round(count.accident/Population*100,3))
+  mutate(.,proportion=round(Count/Population*100,2))
 
 data_byState <- my_data %>% 
   group_by(.,State,County) %>% summarise(.,Count=n())
