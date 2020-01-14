@@ -4,9 +4,18 @@ library(tidyr)
 library(ggplot2)
 library(googleVis)
 
-shinyServer(function(input, output) {
+shinyServer(function(input, output, session) {
   output$linkedin <- renderUI({
     tags$a(imageOutput("linkedin.png"),href="https://www.linkedin.com/in/melanie-zheng-56ab7856/")
+  })
+  
+  
+  observe({
+    var_option2 <- var_option[var_option!= input$var1]
+    updateSelectizeInput(
+      session, "var2",
+      choices = var_option2,
+      selected = var_option2[1])
   })
   
   react_data_State <- reactive({
@@ -22,14 +31,6 @@ shinyServer(function(input, output) {
         xlab("Month") +
         ylab("")+
         ggtitle("Number of Accidents")
-  })
-  
-  
-  react_data_State <- reactive({
-    my_data %>%
-      filter(.,State == input$State) %>% 
-      group_by(.,year, month) %>% summarise(.,count_per_month=n()) %>% 
-      group_by(.,month) %>% summarise(., Average=round(mean(count_per_month)))
   })
   
   output$gvis2 <- renderGvis({
@@ -58,7 +59,6 @@ shinyServer(function(input, output) {
                      resolution = "provinces",colors="['red']",width = 1000,height = 600))
   })
 
-  
   output$visibility <- renderGvis({
     gvisColumnChart(
       data_visibility,

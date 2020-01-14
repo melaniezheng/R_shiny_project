@@ -3,6 +3,8 @@ library(googleVis)
 library(shinythemes)
 library(shinydashboardPlus)
 
+
+
 fluidPage(
   theme=shinytheme("cosmo"),
   tags$head(
@@ -34,24 +36,46 @@ fluidPage(
            fluidRow(
              column(3,
                     h3("Which month does your state have the most accidents?"),
-                    selectizeInput(inputId = "State",label = "Select a state",choices = unique(data_byState[, 'State']))),
+                    selectizeInput(inputId = "State",label = h4(strong("Select a state:")),
+                                   choices = unique(data_byState[, 'State'])),
+                    radioButtons("day_night", label = h5(strong("Day/Night")),
+                                 choices = list("Day" = "day","Night" = "night"),
+                                 selected = "day"),
+                    selectizeInput(inputId = "var1",label = h4(strong("Select 1st variable:")),
+                                   choices = var_option),
+                    selectizeInput(inputId = "var2",label = h4(strong("Select 2nd variable:")),
+                                   choices = var_option),
+                    radioButtons("day_night", label = h5(strong("Day/Night")),
+                                 choices = list("Day" = "day","Night" = "night"),
+                                 selected = "day")),
              column(9,
                     h3("Maybe add the national average for comparison.."),
                     plotOutput("plot1"))
                ),
            fluidRow(
-             column(3,
-                    h3("options...")),
-             column(3,
-                    radioButtons("day_night", label = h3(strong("Day/Night")),
+             column(12,
+                    h4(strong("Options:")))),
+           fluidRow(
+             column(12,
+                    radioButtons("day_night", label = h5(strong("Day/Night")),
                                  choices = list("Day" = "day","Night" = "night"),
                                  selected = "day"),
-                    ),
+                    )),
+           fluidRow(
+             column(12,
+                    selectizeInput(inputId = "humidity2",label = h4(strong("Humidity Level:")),
+                                   choices = unique((my_data[, 'humidity2']))))),  #need to remove NA and add order
+           fluidRow(
              column(3,
-                    selectizeInput(inputId = "humidity",label = h3(strong("Humidity Level:")),
-                                   choices = unique((my_data[, 'humidity'])))),  #need to remove NA and add order
+                    h4(strong("Options:"))),
              column(3,
-                    h3(strong("Another option")))),
+                    radioButtons("day_night", label = h4(strong("Day/Night")),
+                                 choices = list("Day" = "day","Night" = "night"),
+                                 selected = "day"),
+             ),
+             column(6,
+                    selectizeInput(inputId = "humidity2",label = h3(strong("Humidity Level:")),
+                                   choices = unique((my_data[, 'humidity2']))))),  #need to remove NA and add order
            fluidRow(
              column(3, 
                     h3("Top 3 Counties with highest car accident count"),
