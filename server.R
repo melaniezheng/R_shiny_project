@@ -59,19 +59,6 @@ shinyServer(function(input, output) {
   })
 
   
-  output$plot4 <- renderGvis({
-    gvisColumnChart(
-      data3,
-      options = list(
-        legend='none',
-        width = 1300,
-        height = 600,
-        axisTitlesPosition = "none",
-        title = "Accident Location"
-      )
-    )
-  })
-  
   output$visibility <- renderGvis({
     gvisColumnChart(
       data_visibility,

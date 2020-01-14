@@ -6,18 +6,18 @@ library(shinydashboardPlus)
 fluidPage(
   theme=shinytheme("cosmo"),
   tags$head(
-    tags$style(HTML("
-          .navbar .navbar-nav {float: left}
-        ")),
+    tags$style(HTML(".navbar .navbar-nav {float: left}"), 
+               type="text/css", "body {padding-top: 70px;}"),
     #tags$script(HTML("var header = $('.navbar > .navbar-nav');
     #header.append('<div style=\"float:right\"><a href=\"https://www.linkedin.com/in/melanie-zheng/\"><img src=\"linkedin.png\" alt=\"alt\" style=\"position:relative;top:-40px;right:-1100px;\"> </a>`</div>');
     #console.log(header)")
     #),
-  ),
+    ),
   navbarPage(
     title = "US Car Accidents",
     #title = div(img(src = "linkedin.png", height = "100px", style = "position: relative; top: -40px; right: -1100px;")),
     id= "nav",
+    position="fixed-top",
   tabPanel("Overview", 
            fluidRow(column(8, 
                            h2(strong("The Map View")),
@@ -48,9 +48,10 @@ fluidPage(
                                  selected = "day"),
                     ),
              column(3,
-                    selectizeInput(inputId = "humidity",label = "Humidity Level:",choices = unique((my_data[, 'humidity'])))),  #need to remove NA and add order
+                    selectizeInput(inputId = "humidity",label = h3(strong("Humidity Level:")),
+                                   choices = unique((my_data[, 'humidity'])))),  #need to remove NA and add order
              column(3,
-                    h3("another option"))),
+                    h3(strong("Another option")))),
            fluidRow(
              column(3, 
                     h3("Top 3 Counties with highest car accident count"),
@@ -61,7 +62,9 @@ fluidPage(
                     h3("Monthly Average per State vs Humidity(%) Average"),
                     h3("Monthly Average per State vs Pressure(in) Average"),
                     h3("Monthly Average per State vs Temperature Average")),
-             column(9, plotOutput("precipitation")))
+             column(9, 
+                    h3("add a heat map - relationship count of accidents in different humidity/temperature"),
+                    plotOutput("precipitation")))
            ),
   navbarMenu(
     "Interesting Findings",
@@ -82,9 +85,6 @@ fluidPage(
              ),
     tabPanel("About me", 
              "... to fill in ..."
-             ),
-    tabPanel("...",
-             htmlOutput("plot4")
              )
   )
   #mainPanel(fluidRow(
