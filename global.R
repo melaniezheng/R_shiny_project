@@ -24,13 +24,15 @@ data1 <- my_data %>%
   group_by(.,month) %>% summarise(., count.avg.month=round(mean(count.each.month))) %>% 
   mutate(., proportion = count.avg.month/kPopulation)
 
+# accident count per state.
 data2 <- my_data %>% 
   group_by(.,State) %>% summarise(.,Count=n()) 
 
+# accident in proportion to state population.
 data_2 <- my_data %>% 
   group_by(.,State) %>% summarise(.,count.accident=n()) %>% 
   left_join(.,population,by="State") %>% 
-  mutate(.,proportion=count.accident/Population)
+  mutate(.,proportion=round(count.accident/Population*100,3))
 
 data_byState <- my_data %>% 
   group_by(.,State,County) %>% summarise(.,Count=n())

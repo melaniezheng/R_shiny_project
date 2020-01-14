@@ -5,17 +5,31 @@ library(shinydashboardPlus)
 
 fluidPage(
   theme=shinytheme("cosmo"),
+  tags$head(
+    tags$style(HTML("
+          .navbar .navbar-nav {float: left}
+        ")),
+    tags$script(HTML("var header = $('.navbar > .navbar-nav');
+    header.append('<div style=\"float:right\"><a href=\"https://www.linkedin.com/in/melanie-zheng/\"><img src=\"linkedin.png\" alt=\"alt\" style=\"position:relative;top:-40px;right:-1100px;\"> </a>`</div>');
+    console.log(header)")
+    ),
+  ),
   navbarPage(
-    #title = "Car Accidents Analysis",
-    title = div(img(src = "linkedin.png", height = "100px", 
-                    style = "position: relative; top: -40px; right: -1100px;"), "Car Accidents Analysis"),
+    title = "US Car Accidents",
+    #title = div(img(src = "linkedin.png", height = "100px", style = "position: relative; top: -40px; right: -1100px;")),
+    id= "nav",
   tabPanel("Overview", 
-           fluidRow(column(8, htmlOutput("USmap")),
+           fluidRow(column(8, 
+                           h3("Hover over the map to see more detail."),
+                           htmlOutput("USmap")),
                     column(4, 
                            h1("US Car Accident Analysis"),
                            h3("The data is gathered from US car accidents from Februrary 2016 to March 2019."),
-                           htmlOutput("gvis2"))
-           )), 
+                           radioButtons("map", label = h3("Display map by: "),
+                                        choices = list("Count of Accidents" = "Count",
+                                                       "Accidents/Population" = "proportion"),
+                                        selected = "Count"))
+                    )), 
   tabPanel("in Proportion",
            fluidRow(column(8, htmlOutput("USmap1")),
                     column(4,

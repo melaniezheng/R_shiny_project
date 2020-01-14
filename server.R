@@ -24,6 +24,12 @@ shinyServer(function(input, output) {
         ggtitle("Number of Accidents")
   })
   
+  #changed
+  map_data <- reactive({
+    ifelse(input$map)
+      
+  })
+  
   react_data_State <- reactive({
     my_data %>%
       filter(.,State == input$State) %>% 
@@ -51,36 +57,15 @@ shinyServer(function(input, output) {
   
   output$USmap <- renderGvis({
     gvisGeoChart(
-      data2,
-      "State",
-      "Count",
-      options = list(
-        title= "Hover over each state to see more details",
-        region = "US",
-        displayMode = "regions",
-        resolution = "provinces",
-        colors="['red']",
-        width = 1000,
-        height = 600
-      )
-    )
+      data2,"State","Count",
+      options = list(region = "US",displayMode = "regions",
+                     resolution = "provinces",colors="['red']",width = 1000,height = 600))
   })
 
   output$USmap1 <- renderGvis({
     gvisGeoChart(
-      data_2,
-      "State",
-      "proportion",
-      options = list(
-        title= "Hover over each state to see more details",
-        region = "US",
-        displayMode = "regions",
-        resolution = "provinces",
-        colors="['red']",
-        width = 1000,
-        height = 600
-      )
-    )
+      data_2,"State","proportion",
+      options = list(region = "US",displayMode = "regions",resolution = "provinces",colors="['red']",width = 1000,height = 600))
   })
   
   output$plot4 <- renderGvis({

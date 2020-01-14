@@ -1,11 +1,36 @@
-class(data)
-nrow(data)
+library(data.table)
+library(dplyr)
+library(tidyr)
+library(ggplot2)
+library(googleVis)
 
+
+data <- fread(file = "~/NYCDSA/R_shiny_project/US_Accidents_May19.csv", stringsAsFactors = FALSE)
+#population data per state
+population <- fread(file= "~/NYCDSA/R_shiny_project/US_Population_2019_Jul.csv", header = TRUE, stringsAsFactors = FALSE)
+
+#clean up population data
+colnames(population)=c("StateName","State","Population")
+population <- population[-1,]
+population$Population=as.integer(population$Population)
+
+kPopulation <- sum(population$Population)
+
+#join accidents data with population data
 my_data <- data %>%  
-  mutate(.,year=substr(Weather_Timestamp,1,4), month=month.abb[as.integer(substr(Weather_Timestamp,6,7))]) %>% 
-  filter(.,is.na(month)) %>% 
-  mutate(., year =substr(Start_Time,1,4), month = month.abb[as.integer(substr(Start_Time,6,7))]) 
-my_data$month <- factor(my_data$month, levels = month.abb, ordered = T)
+  left_join(., population, by="State") %>% 
+  mutate(.,year=substr(Start_Time,1,4), month=factor(month.abb[as.integer(substr(Start_Time,6,7))], levels=month.abb, ordered = T)) %>% 
+  rename(., temperature = `Temperature(F)`, windChill=`Wind_Chill(F)`,humidity=`Humidity(%)`,pressure=`Pressure(in)`,
+         visibility=`Visibility(mi)`, windspeed=`Wind_Speed(mph)`, precipitation=`Precipitation(in)`)
+
+# humidity vs no. of accidents -- positive correlation
+ggplot(my_data %>% group_by(.,humidity) %>% summarise(., count=n()), aes(humidity, count)) + geom_point(na.rm=T)
+ggplot(my_data %>% group_by(.,temperature) %>% summarise(., count=n()), aes(temperature, count)) + geom_point(na.rm=T)+ ylim(0,5000)
+ggplot(my_data %>% group_by(.,visibility) %>% summarise(., count=n()), aes(visibility, count)) + geom_point(na.rm=T)
+ggplot(my_data %>% group_by(.,precipitation) %>% summarise(., count=n()), aes(precipitation, count)) + geom_point(na.rm=T) + ylim(0,5000)
+ggplot(my_data %>% group_by(.,windspeed) %>% summarise(., count=n()), aes(windspeed, count)) + geom_point(na.rm=T)  + ylim(0,5000)
+ggplot(my_data %>% group_by(.,windChill) %>% summarise(., count=n()), aes(windChill, count)) + geom_point(na.rm=T) + ylim(0,5000)
+
 
 pie <- ggplot(my_data %>% 
                 group_by(.,year, month) %>% 
