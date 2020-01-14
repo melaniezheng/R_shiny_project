@@ -42,11 +42,15 @@ fluidPage(
            fluidRow(
              column(3,
                     h3("options...")),
-             column(9,
+             column(3,
                     radioButtons("day_night", label = h3(strong("Day/Night")),
                                  choices = list("Day" = "day","Night" = "night"),
                                  selected = "day"),
-                    )),
+                    ),
+             column(3,
+                    selectizeInput(inputId = "humidity",label = "Humidity Level:",choices = unique((my_data[, 'humidity'])))),  #need to remove NA and add order
+             column(3,
+                    h3("another option"))),
            fluidRow(
              column(3, 
                     h3("Top 3 Counties with highest car accident count"),

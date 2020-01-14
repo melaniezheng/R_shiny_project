@@ -12,10 +12,21 @@ population <- population[-1,]
 population$Population=as.integer(population$Population)
 kPopulation <- sum(population$Population)
 
+############ to delete ###########
+# set humidity category 0-25, 25-50, 50-75, 75-100
 
+
+##################################
 my_data <- data %>%  
   left_join(., population, by="State") %>% 
-  mutate(.,year=substr(Start_Time,1,4), month=factor(month.abb[as.integer(substr(Start_Time,6,7))], levels=month.abb, ordered = T))
+  mutate(.,year=substr(Start_Time,1,4), 
+         month=factor(month.abb[as.integer(substr(Start_Time,6,7))], levels=month.abb, ordered = T)) %>% 
+  mutate(., humidity=case_when(`Humidity(%)`<25 ~ '<25%',
+                               `Humidity(%)`>=25 & `Humidity(%)`<=50 ~ '25%-50%',
+                               `Humidity(%)`>=50 & `Humidity(%)`<=75 ~ '50%-75%',
+                               `Humidity(%)`>75 ~ '>75%')) %>% 
+  rename(., day_night=Sunrise_Sunset) %>% 
+  select(., -Turning_Loop, -Civil_Twilight, -Nautical_Twilight)
 
 # monthly average accident count and average accident % in proportion to the population (ideally 
 # in proportion to the number of drivers would make much more sense)
