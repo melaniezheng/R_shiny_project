@@ -24,6 +24,7 @@ kPopulation <- sum(population$Population)
 #ggplot(my_data) + 
   #geom_bin2d(aes(var1,var2), na.rm = T)  +
   #scale_fill_gradient(low="#FCC8C5", high="#D10C00")
+
   
 ##################################
 my_data <- data %>%  

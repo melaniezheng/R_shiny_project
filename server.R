@@ -9,7 +9,6 @@ shinyServer(function(input, output, session) {
     tags$a(imageOutput("linkedin.png"),href="https://www.linkedin.com/in/melanie-zheng-56ab7856/")
   })
   
-  
   observe({
     var_option2 <- var_option[var_option!= input$var1]
     updateSelectizeInput(
@@ -25,6 +24,11 @@ shinyServer(function(input, output, session) {
       group_by(.,month) %>% summarise(., Average=round(mean(count_per_month)))
   })
   
+  react_heatmap <- reactive({
+    my_data %>%
+      filter(.,State == input$State)
+  })
+  
   output$plot1 <- renderPlot({
         ggplot(data = react_data_State(), aes(x=month, y=Average)) +
         geom_col(position="dodge", fill = "#FF6666", width = 0.4) +
@@ -33,9 +37,9 @@ shinyServer(function(input, output, session) {
         ggtitle("Number of Accidents")
   })
   
-  output$headmap <- renderPlot({
-    ggplot(my_data) + 
-      geom_bin2d(aes(var1,var2), na.rm =T) +
+  output$heatmap <- renderPlot({
+    ggplot(data=react_heatmap()) + 
+      geom_bin2d(aes_string(input$var1,input$var2),na.rm =T) +
       scale_fill_gradient(low="#FCC8C5", high="#D10C00")
   })
   

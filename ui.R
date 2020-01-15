@@ -43,7 +43,7 @@ fluidPage(
                                  choices = list("Day" = "day","Night" = "night"),
                                  selected = "day")),
                     selectizeInput(inputId = "humidity2",label = h4(strong("Humidity Level:")),
-                                   choices = unique((my_data[, 'humidity2'])))
+                                   choices = unique(my_data %>% filter(!is.na(humidity)) %>% select(.,humidity2)))
                     ),
              column(10,
                     h5("Maybe add the national average for comparison.."),
@@ -63,7 +63,7 @@ fluidPage(
                     h4(" ")),
              column(10, 
                     
-                    plotOutput("headmap")))
+                    plotOutput("heatmap")))
            ),
   navbarMenu(
     "Interesting Findings",
