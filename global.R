@@ -24,9 +24,7 @@ kPopulation <- sum(population$Population)
 #ggplot(my_data) + 
   #geom_bin2d(aes(var1,var2), na.rm = T)  +
   #scale_fill_gradient(low="#FCC8C5", high="#D10C00")
-#my_data %>% group_by(., year, month) %>% summarise(., count=n()) %>% 
-#  group_by(., month) %>% summarise(.,Count=mean(count), proportion=Count/kPopulation)
-  
+
 ##################################
 my_data <- data %>%  
   left_join(., population, by="State") %>% 
@@ -42,6 +40,30 @@ my_data <- data %>%
   select(., -Turning_Loop, -Civil_Twilight, -Nautical_Twilight, -Astronomical_Twilight, -Railway, -Roundabout, 
          -Station, -Stop, -Traffic_Calming, -Traffic_Signal, -No_Exit, -Junction, -Give_Way, -Crossing, -Bump, 
          -Amenity, -Timezone, -Airport_Code)
+
+# data for nation-wide average
+data_USA <- my_data %>% group_by(.,year,month,State) %>% summarise(.,count=n()) %>% inner_join(.,population,by="State") %>% 
+  select(.,-StateName) %>% mutate(.,proportion=count/Population*100) %>% 
+  group_by(year, month) %>% summarise(avg=mean(count), avg_prop=mean(proportion)) %>% 
+  group_by(.,month) %>% summarise(.,Count=round(mean(avg)), Proportion=round(mean(avg_prop),3)) %>% 
+  mutate(., type="USA") 
+
+# SC_selected <- my_data %>% filter(., State=="SC") %>% 
+#   group_by(.,year, month, State) %>% 
+#   summarise(.,count=n())%>% inner_join(.,population,by="State") %>% select(.,-StateName) %>% 
+#   mutate(.,proportion=count/Population*100) %>% 
+#   group_by(., month) %>% summarise(.,Count=round(mean(count)), Proportion=round(mean(proportion),3)) %>% 
+#   mutate(., type="SC") 
+
+# new <- rbind(data_USA, SC_selected)
+
+# ggplot(data=new, aes(month, proportion, fill=type))+
+  # geom_col(position="dodge", width = 0.4) +
+  # xlab("Month") +
+  # ylab("")+
+  # ggtitle("Number of Accidents")
+
+
 
 # monthly average accident count and average accident % in proportion to the population (ideally 
 # in proportion to the number of drivers would make much more sense)

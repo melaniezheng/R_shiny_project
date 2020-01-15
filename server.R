@@ -19,21 +19,34 @@ shinyServer(function(input, output, session) {
       filter(.,State == input$State)
   })
   
-  output$plot1 <- renderPlot({
+  output$bar <- renderPlot({
         ggplot(react_state_selected() %>% 
                  group_by(.,year, month) %>% summarise(.,count_per_month=n()) %>%
                  group_by(.,month) %>% summarise(., Average=round(mean(count_per_month)))
                  , aes(x=month, y=Average)) +
         geom_col(position="dodge", fill = "#FF6666", width = 0.4) +
-        xlab("Month") +
-        ylab("")+
+        xlab("Month") + ylab("") +
         ggtitle("Number of Accidents")
+  })
+  output$bar2 <- renderPlot({
+    ggplot(rbind(react_state_selected() %>% 
+             group_by(.,year, month, State) %>% 
+             summarise(.,count=n())%>% inner_join(.,population,by="State") %>% select(.,-StateName) %>% 
+             mutate(.,proportion=count/Population*100) %>% 
+             group_by(., month) %>% summarise(.,Count=round(mean(count)), Proportion=round(mean(proportion),3)) %>% 
+             mutate(., type=input$State),data_USA)
+           , aes_string(x="month", y=input$bar,fill="type")) +
+      geom_col(position="dodge", width = 0.5) +
+      xlab("Month") +
+      ylab("")+
+      ggtitle("Number of Accidents")
   })
   
   output$heatmap <- renderPlot({
     ggplot(data=react_state_selected()) + 
       geom_bin2d(aes_string(input$var1,input$var2),na.rm =T) +
-      scale_fill_gradient(low="#FCC8C5", high="#D10C00")
+      scale_fill_gradient(low="#FCC8C5", high="#D10C00") 
+      # theme(legend.position = "bottom")
   })
   
   output$gvis2 <- renderGvis({
@@ -76,6 +89,7 @@ shinyServer(function(input, output, session) {
       )
     )
   })
+  
   output$precipitation <- renderPlot({
     ggplot(data_byZipcode, aes(avg.precipitation, accident.count)) + geom_line(stat="identity")
   })
