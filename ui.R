@@ -36,18 +36,20 @@ fluidPage(
   tabPanel("EXPLORE", 
            fluidRow(
              column(2,
-                    wellPanel(
                     selectizeInput(inputId = "State",label = h4(strong("Choose a state:")),
                                    choices = unique(data_byState[, 'State'])),
-                    radioButtons("day_night", label = h5(strong("Day/Night")),
-                                 choices = list("Day" = "day","Night" = "night"),
-                                 selected = "day")),
+                    radioButtons("bar", label = h4(strong("Choose from:")),
+                                 choices = list("Count of Accidents" = "Count",
+                                                "Accidents/Population (in %)" = "Proportion"),
+                                 selected = "Count"),
                     selectizeInput(inputId = "humidity2",label = h4(strong("Humidity Level:")),
                                    choices = unique(my_data %>% filter(!is.na(humidity)) %>% select(.,humidity2)))
                     ),
-             column(10,
-                    h5("Maybe add the national average for comparison.."),
-                    plotOutput("plot1"))
+             column(5,
+                    h5("Blue bar provides the national average for comparison"),
+                    plotOutput("bar2")),
+             column(5,
+                    h3("plot"))
                ),
            hr(),
            fluidRow(
