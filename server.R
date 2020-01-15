@@ -5,10 +5,7 @@ library(ggplot2)
 library(googleVis)
 
 shinyServer(function(input, output, session) {
-  output$linkedin <- renderUI({
-    tags$a(imageOutput("linkedin.png"),href="https://www.linkedin.com/in/melanie-zheng-56ab7856/")
-  })
-  
+
   observe({
     var_option2 <- var_option[var_option!= input$var1]
     updateSelectizeInput(
@@ -17,20 +14,16 @@ shinyServer(function(input, output, session) {
       selected = var_option2[1])
   })
   
-  react_data_State <- reactive({
-    my_data %>%
-      filter(.,State == input$State) %>% 
-      group_by(.,year, month) %>% summarise(.,count_per_month=n()) %>% 
-      group_by(.,month) %>% summarise(., Average=round(mean(count_per_month)))
-  })
-  
-  react_heatmap <- reactive({
+  react_state_selected <- reactive({
     my_data %>%
       filter(.,State == input$State)
   })
   
   output$plot1 <- renderPlot({
-        ggplot(data = react_data_State(), aes(x=month, y=Average)) +
+        ggplot(react_state_selected() %>% 
+                 group_by(.,year, month) %>% summarise(.,count_per_month=n()) %>%
+                 group_by(.,month) %>% summarise(., Average=round(mean(count_per_month)))
+                 , aes(x=month, y=Average)) +
         geom_col(position="dodge", fill = "#FF6666", width = 0.4) +
         xlab("Month") +
         ylab("")+
@@ -38,7 +31,7 @@ shinyServer(function(input, output, session) {
   })
   
   output$heatmap <- renderPlot({
-    ggplot(data=react_heatmap()) + 
+    ggplot(data=react_state_selected()) + 
       geom_bin2d(aes_string(input$var1,input$var2),na.rm =T) +
       scale_fill_gradient(low="#FCC8C5", high="#D10C00")
   })

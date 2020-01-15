@@ -24,7 +24,8 @@ kPopulation <- sum(population$Population)
 #ggplot(my_data) + 
   #geom_bin2d(aes(var1,var2), na.rm = T)  +
   #scale_fill_gradient(low="#FCC8C5", high="#D10C00")
-
+#my_data %>% group_by(., year, month) %>% summarise(., count=n()) %>% 
+#  group_by(., month) %>% summarise(.,Count=mean(count), proportion=Count/kPopulation)
   
 ##################################
 my_data <- data %>%  
@@ -65,8 +66,6 @@ data_byState <- my_data %>%
 data_byZipcode <- my_data %>% 
   filter(., !is.na(precipitation)) %>% group_by(., Zipcode) %>% 
   summarise(., avg.precipitation=mean(precipitation), accident.count=n())
-
-
 
 sample <- tail(my_data,10)
 data_visibility <- my_data %>% group_by(.,visibility) %>% summarise(.,Count=n())
