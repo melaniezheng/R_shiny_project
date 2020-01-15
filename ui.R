@@ -6,9 +6,9 @@ library(shinydashboardPlus)
 
 
 fluidPage(
-  theme=shinytheme("cosmo"),
+  theme=shinytheme("journal"),
   tags$head(
-    tags$style(HTML(".navbar .navbar-nav {float: left}"), 
+    tags$style(HTML(".navbar .navbar-nav {float: right}"), 
                type="text/css", "body {padding-top: 70px;}"),
     #tags$script(HTML("var header = $('.navbar > .navbar-nav');
     #header.append('<div style=\"float:right\"><a href=\"https://www.linkedin.com/in/melanie-zheng/\"><img src=\"linkedin.png\" alt=\"alt\" style=\"position:relative;top:-40px;right:-1100px;\"> </a>`</div>');
@@ -20,7 +20,7 @@ fluidPage(
     #title = div(img(src = "linkedin.png", height = "100px", style = "position: relative; top: -40px; right: -1100px;")),
     id= "nav",
     position="fixed-top",
-  tabPanel("Overview", 
+  tabPanel("OVERVIEW", 
            fluidRow(column(7, 
                            h2(strong("The Map View")),
                            h4("The data is gathered from US car accidents from Februrary 2016 to March 2019."),
@@ -33,7 +33,7 @@ fluidPage(
                                         selected = "Count"),
                            h5("Hover over the map to see more detail.")))
   ), 
-  tabPanel("Explore", 
+  tabPanel("EXPLORE", 
            fluidRow(
              column(2,
                     wellPanel(
@@ -49,42 +49,33 @@ fluidPage(
                     h5("Maybe add the national average for comparison.."),
                     plotOutput("plot1"))
                ),
+           hr(),
            fluidRow(
              column(2, 
-                    h2(strong("HEAT MAP"))),
-             column(2,
+                    h2(strong("HEAT MAP")),
                     selectizeInput(inputId = "var1",label = h4(strong("Select 1st variable:")),
-                                   choices = var_option)),
-             column(2,
+                                   choices = var_option),
                     selectizeInput(inputId = "var2",label = h4(strong("Select 2nd variable:")),
-                                   choices = var_option))),
-           fluidRow(
-             column(2, 
-                    h4(" ")),
-             column(10, 
-                    
+                                   choices = var_option)),
+             column(5, 
                     plotOutput("heatmap")))
            ),
   navbarMenu(
-    "Interesting Findings",
-    tabPanel("Participation/Humidity",
-             "... to fill in ..."
-             ),
-    tabPanel("Visibility",
+    "DATA",
+    tabPanel("DATA TABLE",
+             "... to fill in ...",
              htmlOutput("visibility")
              ),
-    tabPanel("Wind Speed/DIrection",
+    tabPanel("DATA SOURCE",
              "... to fill in ..."
              )
   ),
-  navbarMenu(
-    "More",
-    tabPanel("Data Source", 
-             "... to fill in ..."
-             ),
-    tabPanel("About me", 
-             "... to fill in ..."
-             )
+  tabPanel(
+    "ABOUT ME/CONTACT",
+    fluidRow(
+      h1("about me")
+    )
+
   )
   #mainPanel(fluidRow(
     #column(12,
