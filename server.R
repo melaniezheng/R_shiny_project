@@ -26,9 +26,9 @@ shinyServer(function(input, output, session) {
       arrange(.,desc(Number)) %>% top_n(.,3) %>% select(.,StateName)
   })
   
-  react_topCities <- reactive({
-    data_city %>% filter(.,State==input$State) %>% 
-      arrange(., desc(Count)) %>% top_n(.,3) %>% select(.,City)
+  react_topCounties <- reactive({
+    data_county %>% filter(.,State==input$State) %>% 
+      arrange(., desc(Count)) %>% top_n(.,3) 
   })
   
   data_4 <- reactive({
@@ -41,11 +41,21 @@ shinyServer(function(input, output, session) {
       group_by(., month,day_night) %>% summarise(.,Count=round(mean(count)), Proportion=round(mean(proportion),3)) 
   })
   
-  react_plotVar_selected <- reactive({
-    my_data %>% 
-      filter(., State== input$State) %>%
-      group_by(.,my_data[,input$plot_var]) %>% summarise(., Count=n()) %>%
-      `colnames<-`(c(input$plot_var, "Count"))
+  # react_plotVar_selected <- reactive({
+  #   my_data %>%
+  #     filter(., State == input$State) %>%
+  #     group_by(.,my_data[,"humidity"]) %>%
+  #     summarise(., Count=n()) %>% 
+  #     `colnames<-`(c("humidity", "Count"))
+  # })
+  
+  react_dt <- reactive({
+    my_data %>% filter(.,State==input$State2)
+  })
+  
+  output$table <- DT::renderDataTable({
+    DT::datatable(react_dt(), rownames=FALSE) %>% 
+      DT::formatStyle("State",background="#E88E8E",fontWeight='bold')
   })
 
   output$top1 <- renderUI({ 
@@ -75,6 +85,39 @@ shinyServer(function(input, output, session) {
     )
   })
 
+  output$top1county <- renderUI({ 
+    top1 <- react_topCounties()[1,"County"]
+    cnt <- react_topCounties()[1,"Count"]
+    # HTML('&nbsp;') to add 1 whitespace and HTML('&emsp;') to add 1 tab space
+    HTML(paste(
+      p(HTML("NO.1:"),HTML('&nbsp;'),top1, HTML("<br />"),
+        HTML("Count:"), HTML('&nbsp;'), cnt)
+    )
+    )
+  })
+  
+  output$top2county <- renderUI({ 
+    top2 <- react_topCounties()[2,"County"]
+    cnt <- react_topCounties()[2,"Count"]
+    # HTML('&nbsp;') to add 1 whitespace and HTML('&emsp;') to add 1 tab space
+    HTML(paste(
+      p(HTML("NO.2:"),HTML('&nbsp;'),top2, HTML("<br />"),
+        HTML("Count:"), HTML('&nbsp;'), cnt)
+    )
+    )
+  })
+  
+  output$top3county <- renderUI({ 
+    top3 <- react_topCounties()[3,"County"]
+    cnt <- react_topCounties()[3,"Count"]
+    # HTML('&nbsp;') to add 1 whitespace and HTML('&emsp;') to add 1 tab space
+    HTML(paste(
+      p(HTML("NO.3:"),HTML('&nbsp;'),top3, HTML("<br />"),
+        HTML("Count:"), HTML('&nbsp;'), cnt)
+    )
+    )
+  })
+  
   output$map_desc <- renderUI({ 
     # HTML('&nbsp;') to add 1 whitespace and HTML('&emsp;') to add 1 tab space
     HTML(paste(
@@ -82,6 +125,16 @@ shinyServer(function(input, output, session) {
     )
     )
   })
+  
+  output$heatmap_desc <- renderUI({ 
+    # HTML('&nbsp;') to add 1 whitespace and HTML('&emsp;') to add 1 tab space
+    HTML(paste(
+      p(HTML('&nbsp;'),HTML('&nbsp;'),HTML('&nbsp;'),
+        HTML('&nbsp;'),"Explore the relationship between different weather variables and the number of accidents.")
+    )
+    )
+  })
+  
   output$bar_desc <- renderUI({ 
     HTML(paste(
       p(HTML('&nbsp;'),HTML('&nbsp;'),HTML('&nbsp;'),HTML('&nbsp;'),HTML('&nbsp;'),HTML('&nbsp;'),
@@ -89,17 +142,18 @@ shinyServer(function(input, output, session) {
     )
     )
   })
-  output$plot_desc <- renderUI({ 
-    HTML(
-      p("Discover the correlation between the count of accident and different variables")
-    )
-  })
+  # output$plot_desc <- renderUI({ 
+  #   HTML(
+  #     p("Discover the correlation between the count of accident and different variables")
+  #   )
+  # })
   
-  output$plot <- renderPlot({
-    ggplot(react_state_selected(),
-           aes_string(x=input$plot_var, y="Count")) +
-      geom_point(na.rm=T, color='#E86E6E')
-  })
+  # output$plot <- renderPlot({
+  #   ggplot(react_plotVar_selected() %>% mutate_all(., function(x) {as.integer(x)}),
+  #          aes_string("humidity","Count")) +
+  #     geom_point(na.rm=T, color='#E86E6E') +
+  #     ylab("") + ggtitle("Count")
+  # })
 
   # output$plot2 <- renderGvis({
   #   gvisScatterChart(react_plotVar_selected()[,c(input$bar,"Count"), drop=FALSE],
@@ -112,7 +166,7 @@ shinyServer(function(input, output, session) {
   output$leaflet <- renderLeaflet({
     leaflet(react_state_selected()) %>% 
       #addPolygons(data=colState, stroke=F) %>% 
-      addCircles(~Start_Lng, ~Start_Lat) %>% 
+      addCircles(~Start_Lng, ~Start_Lat, color="#E82A2A") %>% 
       addProviderTiles('Esri.WorldStreetMap')
   })
   
@@ -125,40 +179,38 @@ shinyServer(function(input, output, session) {
                    mutate(., type=input$State),data_USA)
            , aes_string(x="month", y=input$bar,fill="type")) +
       geom_col(position="dodge", width = 0.5) +
-      xlab("") +
-      ylab(input$bar)
+      xlab("") + ylab("") + ggtitle(input$bar)
   })
   
   output$bar2 <- renderPlot({
     ggplot(data_4(),
            aes_string(x="month", y=input$bar,fill="day_night")) +
       geom_col(width = 0.5) +
-      xlab("") +
-      ylab(input$bar)
+      xlab("") + ylab("") + ggtitle(input$bar)
   })
   
   output$heatmap <- renderPlot({
     ggplot(data=react_state_selected()) + 
       geom_bin2d(aes_string(input$var1,input$var2),na.rm =T) +
-      scale_fill_gradient(low="#E8B5B5", high="#E80000") 
+      scale_fill_gradient(low="#E8B5B5", high="#E80000") + xlab(input$var1) + ylab("") + 
+      ggtitle(input$var2)
       # theme(legend.position = "bottom")
   })
   
-  # output$pie <- renderGvis({
-  #   gvisPieChart(data1 %>% select(.,month,count.avg.month), 
-  #                options=list(width=500, height=550, title="Average Monthly Car Accidents (in %)"))
-  # })
-  
-  # output$gvis3 <- renderGvis({
-  #   gvisColumnChart(
-  #     data2,
-  #     options = list(
-  #       legend='none',width = 1200,height = 600,
-  #       axisTitlesPosition = "none",title = "Average Accidents Per Year"
-  #     )
-  #   )
-  # })
-  
+  output$insurance <- renderGvis({
+    gvisLineChart(
+      df[, c("type", "proportion", "Insurance")],
+      "type",c("proportion", "Insurance"),
+      options = list(
+        width = "1000px",
+        height = "600px",
+        series = "[{targetAxisIndex: 0},{targetAxisIndex:1}]",
+        hAxe = "{title:'States'}",
+        vAxes = "[{title:'Car Accident Per Capita (in %)'}, {title:'Insurance ($)'}]"
+      )
+    )
+  })
+
   
   output$USmap <- renderGvis({
     gvisGeoChart(
@@ -188,6 +240,19 @@ shinyServer(function(input, output, session) {
   #   )
   # })
   
+  # output$pie <- renderGvis({
+  #   gvisPieChart(data1 %>% select(.,month,count.avg.month), 
+  #                options=list(width=500, height=550, title="Average Monthly Car Accidents (in %)"))
+  # })
   
+  # output$gvis3 <- renderGvis({
+  #   gvisColumnChart(
+  #     data2,
+  #     options = list(
+  #       legend='none',width = 1200,height = 600,
+  #       axisTitlesPosition = "none",title = "Average Accidents Per Year"
+  #     )
+  #   )
+  # })
   
 })

@@ -16,12 +16,13 @@ var_option <- c("temperature", "windchill", "humidity", "pressure", "visibility"
 #data <- fread(file = "~/NYCDSA/R_shiny_project/US_Accidents_May19.csv", stringsAsFactors = FALSE)
 #population data per state
 population <- fread(file= "US_Population_2019_Jul.csv", header = TRUE, stringsAsFactors = FALSE)
-counties <- fread(file="uscounties.csv", header = T, stringsAsFactors = F)
-#geocode <- fread(file="Geocodes_USA_with_Counties.csv", header = T, stringsAsFactors = F)
 colnames(population)=c("StateName","State","Population")
 population <- population[-1,]
 population$Population=as.integer(population$Population)
-# kPopulation <- sum(population$Population)
+
+insurance <- fread(file="Car_Insurance_Cost_by_State.csv", header = T, stringsAsFactors = F)
+colnames(insurance) <- c("StateName","Insurance")
+kInsurance <- round(mean(insurance$Insurance))
 
 
 # my_data <- data %>%
@@ -40,7 +41,7 @@ population$Population=as.integer(population$Population)
 # write.csv(my_data, "~/NYCDSA/R_shiny_project/US_Accidents.csv", row.names = F)
 
 # data for nation-wide average
-my_data <- fread(file = "~/NYCDSA/R_shiny_project/US_Accidents.csv", stringsAsFactors = FALSE)
+my_data <- fread(file = "US_Accidents.csv", stringsAsFactors = FALSE)
 states <- unique(my_data$State)
 colState <- map("state", fill=T, plot=F,
                 region=states)  # for leaflet
@@ -51,21 +52,24 @@ data_USA <- my_data %>% group_by(.,year,month,State) %>% summarise(.,count=n()) 
   group_by(.,month) %>% summarise(.,Count=round(mean(avg)), Proportion=round(mean(avg_prop),3)) %>%
   mutate(., type="USA")
 
+k_proportion=mean(data_USA$Proportion)
 
+insurance_USA <- data_USA %>% group_by(.,type) %>% summarise(.,Count=round(mean(Count)), proportion=mean(Proportion))
+insurance_USA$Insurance=as.integer(kInsurance)
+
+
+
+  
 # monthly average accident count and average accident % in proportion to the population (ideally 
 # in proportion to the number of drivers would make much more sense)
-# data1 <- my_data %>% 
-#   group_by(.,year, month) %>% summarise(., count.each.month=n()) %>% 
-#   group_by(.,month) %>% summarise(., count.avg.month=round(mean(count.each.month))) %>% 
-#   mutate(., proportion = count.avg.month/kPopulation)
 
 # accident count per state.
 data2 <- my_data %>% 
   group_by(.,State) %>% summarise(.,Count=n()) 
 
 #accident count per city.
-data_city <- my_data %>% 
-  group_by(., State, City) %>% summarise(.,Count=n())
+data_county <- my_data %>% 
+  group_by(., State, County) %>% summarise(.,Count=n())
 
 # accident in proportion to state population.
 data_2 <- my_data %>% 
@@ -73,19 +77,37 @@ data_2 <- my_data %>%
   left_join(.,population,by="State") %>% 
   mutate(.,proportion=round(Count/Population*100,3)) 
 
-# data_County <- my_data %>% filter(.,State== "CA") %>% group_by(., State,County) %>% 
-#   summarise(.,Count=n()) %>% 
-#   left_join(.,population,by="State") %>% 
-#   mutate(.,Proportion=round(Count/Population*100,3))
+# df <- my_data %>%
+#   filter(., State == "AL") %>%
+#   group_by(.,as.character(my_data[,"humidity"])) %>%
+#   summarise(., Count=n()) %>% 
+#   `colnames<-`(c("humidity", "Count"))
+# ggplot(df, aes_string(x="humidity",y="Count"))+geom_point(na.rm=T)
 
+data_state_insurance <- my_data %>% #filter(.,State=="AL") %>%
+  group_by(.,State,year) %>% summarise(.,count=n()) %>%
+  group_by(.,State) %>% summarise(.,Count=round(mean(count))) %>%
+  left_join(., population, by="State") %>%
+  mutate(.,proportion=round(Count/Population*100,3)) %>%
+  left_join(.,insurance, by="StateName") %>%
+  select(.,State,Count,proportion,Insurance) %>%
+  rename(., type=State)
 
-# data_County_geocode <- left_join(data_County, geocode %>% group_by(.,county) %>% summarise(.,lat=median(latitude),long=median(longitude)) 
-#           %>% rename(., County=county), by="County")
+df <- as.data.frame(rbind(data_state_insurance,insurance_USA) %>%
+                      mutate(.,n=1:50))
 
-
-# data_byZipcode <- my_data %>% 
-#   filter(., !is.na(precipitation)) %>% group_by(., Zipcode) %>% 
-#   summarise(., avg.precipitation=mean(precipitation), accident.count=n())
-
-# data_visibility <- my_data %>% group_by(.,visibility) %>% summarise(.,Count=n())
+# gvisLineChart(
+#   df[, c("type", "proportion", "Insurance")],
+#   "type",
+#   c("proportion", "Insurance"),
+#   options = list(
+#     width = "1000px",
+#     height = "600px",
+#     series = "[{targetAxisIndex: 0},
+#                          {targetAxisIndex:1}]",
+#     hAxe = "{title:'States'}",
+#     vAxes = "[{title:'Car Accident Per Capita (in %)'}, {title:'Insurance ($)'}]",
+#     title = "Car Insurance Premium vs Car Accidents per capita"
+#   )
+# )
 
