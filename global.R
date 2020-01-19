@@ -14,21 +14,9 @@ var_option <- c("temperature", "windchill", "humidity", "pressure", "visibility"
 
 
 #data <- fread(file = "~/NYCDSA/R_shiny_project/US_Accidents_May19.csv", stringsAsFactors = FALSE)
-#population data per state
-population <- fread(file= "US_Population_2019_Jul.csv", header = TRUE, stringsAsFactors = FALSE)
-colnames(population)=c("StateName","State","Population")
-population <- population[-1,]
-population$Population=as.integer(population$Population)
-
-insurance <- fread(file="Car_Insurance_Cost_by_State.csv", header = T, stringsAsFactors = F)
-colnames(insurance) <- c("StateName","Insurance")
-kInsurance <- round(mean(insurance$Insurance))
-
 
 # my_data <- data %>%
-#   #left_join(., population, by="State") %>%
-#   mutate(.,year=substr(Start_Time,1,4),
-#          month=factor(month.abb[as.integer(substr(Start_Time,6,7))], levels=month.abb, ordered = T)) %>%
+#   mutate(.,year=substr(Start_Time,1,4),month=substr(Start_Time,6,7)) %>% 
 #   rename(., day_night=Sunrise_Sunset, temperature=`Temperature(F)`, windchill=`Wind_Chill(F)`,
 #          pressure=`Pressure(in)`, visibility=`Visibility(mi)`, windspeed=`Wind_Speed(mph)`,
 #          precipitation=`Precipitation(in)`, humidity=`Humidity(%)`) %>%
@@ -38,10 +26,22 @@ kInsurance <- round(mean(insurance$Insurance))
 #          -Description, -Number, -End_Time, -Source, -ID,-End_Lat, -End_Lng, -`Distance(mi)`, -TMC, -Start_Time, -Zipcode,
 #          -Country)
 
-# write.csv(my_data, "~/NYCDSA/R_shiny_project/US_Accidents.csv", row.names = F)
+#write.csv(my_data, "~/NYCDSA/R_shiny_project/US_Accidents.csv", row.names = F)
 
-# data for nation-wide average
+#population data per state
+population <- fread(file= "US_Population_2019_Jul.csv", header = TRUE, stringsAsFactors = FALSE)
+colnames(population)=c("StateName","State","Population")
+population <- population[-1,]
+population$Population=as.integer(population$Population)
+
+# annual insurance premium per state
+insurance <- fread(file="Car_Insurance_Cost_by_State.csv", header = T, stringsAsFactors = F)
+colnames(insurance) <- c("StateName","Insurance")
+kInsurance <- round(mean(insurance$Insurance))
+
+# car accidents data
 my_data <- fread(file = "US_Accidents.csv", stringsAsFactors = FALSE)
+my_data <- my_data %>% mutate(.,month=factor(month.abb[as.integer(month)], levels=month.abb, ordered = T))
 states <- unique(my_data$State)
 colState <- map("state", fill=T, plot=F,
                 region=states)  # for leaflet
@@ -56,12 +56,6 @@ k_proportion=mean(data_USA$Proportion)
 
 insurance_USA <- data_USA %>% group_by(.,type) %>% summarise(.,Count=round(mean(Count)), proportion=mean(Proportion))
 insurance_USA$Insurance=as.integer(kInsurance)
-
-
-
-  
-# monthly average accident count and average accident % in proportion to the population (ideally 
-# in proportion to the number of drivers would make much more sense)
 
 # accident count per state.
 data2 <- my_data %>% 
@@ -94,8 +88,7 @@ data_state_insurance <- my_data %>% #filter(.,State=="AL") %>%
   rename(., type=State)
 
 df <- as.data.frame(rbind(data_state_insurance,insurance_USA) %>%
-                      mutate(.,n=1:50))
-
+                      mutate(.,n=1:50)) %>% rename(., Accidents=proportion)
 # gvisLineChart(
 #   df[, c("type", "proportion", "Insurance")],
 #   "type",

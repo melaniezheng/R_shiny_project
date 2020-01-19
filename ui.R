@@ -154,31 +154,45 @@ fluidPage(
       ),
       hr(),
       fluidRow(
-        column(2),
-        column(10, align="left",
-               h4("CAR INSURANCE PREMIUM VS CAR ACCIDENTS PER CAPITA"),
-               htmlOutput("insurance"),
-               "hover over the line chart to see which states has the highest car insurance premium"
-        )
+        column(2, align="left",
+               h4(strong("CAR ACCIDENTS")),
+               h4(strong("VS."),style="color:red;"),
+               h4(strong("INSURANCE PREMIUM"))),
+        column(8, align="left",
+               htmlOutput("insurance_desc"),
+               htmlOutput("insurance")
+               ),
+        column(2,"")
         )),
     navbarMenu(
       "DATA",
       icon = icon("database"),
       tabPanel(
-        "DATA TABLE",
-        fluidRow(
-          "Dataset is very large with 2.25 million records. ",
+        "ACCIDENTS DATA",
+        fluidRow(column(3,
+          "Dataset is very large with 2.25 million records. "),
           selectizeInput(
             inputId = "State2",
             label = h4(strong("Choose a state:")),
             choices = unique(data_2[, 'State'])
-          ),
+          )),
+        fluidRow(
+          uiOutput("url_kaggle", align="right"),
           hr(),
           DT::dataTableOutput("table")
         )
       ),
-      tabPanel("DATA SOURCE",
-               h3("Data is found in Kaggle."))
+      tabPanel("POPULATION DATA",
+               fluidRow(column(6,
+                               uiOutput("url_population", align="left"),
+                               hr(),
+                 DT::dataTableOutput("table_population")
+               ))),
+      tabPanel("INSURANCE DATA",
+               fluidRow(column(6,
+                               uiOutput("url_insurance"),
+                               hr(),
+                               DT::dataTableOutput("table_insurance"))))
     ),
     tabPanel(
       "ABOUT ME/CONTACT",

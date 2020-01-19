@@ -6,7 +6,23 @@ library(googleVis)
 library(shinydashboard)
 
 shinyServer(function(input, output, session) {
+  
+  url_kaggle <- a("Kaggle", href="https://www.kaggle.com/sobhanmoosavi/us-accidents")
+  url_population <- a("Wikipedia", href="https://en.wikipedia.org/wiki/List_of_states_and_territories_of_the_United_States_by_population")
+  url_insurance <- a("insure.com", href="https://www.insure.com/car-insurance/car-insurance-rates.html")
 
+  output$url_kaggle <- renderUI({
+    tagList("Source:", url_kaggle)
+  })
+  
+  output$url_population <- renderUI({
+    tagList("Source:", url_population)
+  })
+  
+  output$url_insurance <- renderUI({
+    link <- tagList("Source:",url_insurance)
+  })
+  
   observe({
     var_option2 <- var_option[var_option!= input$var1]
     updateSelectizeInput(
@@ -56,6 +72,16 @@ shinyServer(function(input, output, session) {
   output$table <- DT::renderDataTable({
     DT::datatable(react_dt(), rownames=FALSE) %>% 
       DT::formatStyle("State",background="#E88E8E",fontWeight='bold')
+  })
+  
+  output$table_population <- DT::renderDataTable({
+    DT::datatable(population, rownames=FALSE) %>% 
+      DT::formatStyle("StateName",background="#E88E8E",fontWeight='bold')
+  })
+  
+  output$table_insurance <- DT::renderDataTable({
+    DT::datatable(insurance, rownames=FALSE) %>% 
+      DT::formatStyle("StateName",background="#E88E8E",fontWeight='bold')
   })
 
   output$top1 <- renderUI({ 
@@ -135,6 +161,15 @@ shinyServer(function(input, output, session) {
     )
   })
   
+  output$insurance_desc <- renderUI({ 
+    # HTML('&nbsp;') to add 1 whitespace and HTML('&emsp;') to add 1 tab space
+    HTML(paste(
+      p(HTML('&nbsp;'),HTML('&nbsp;'),
+        HTML('&nbsp;'),"Hover over the line chart to look at numbers for a specific state.")
+    )
+    )
+  })
+  
   output$bar_desc <- renderUI({ 
     HTML(paste(
       p(HTML('&nbsp;'),HTML('&nbsp;'),HTML('&nbsp;'),HTML('&nbsp;'),HTML('&nbsp;'),HTML('&nbsp;'),
@@ -199,8 +234,8 @@ shinyServer(function(input, output, session) {
   
   output$insurance <- renderGvis({
     gvisLineChart(
-      df[, c("type", "proportion", "Insurance")],
-      "type",c("proportion", "Insurance"),
+      df[, c("type", "Accidents", "Insurance")],
+      "type",c("Accidents", "Insurance"),
       options = list(
         width = "1000px",
         height = "600px",
