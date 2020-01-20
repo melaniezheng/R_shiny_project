@@ -15,42 +15,35 @@ fluidPage(
   ),
   navbarPage(
     title = "US CAR ACCIDENTS",
-    #title = div(img(src = "linkedin.png", height = "100px", style = "position: relative; top: -40px; right: -1100px;")),
     id = "nav",
     position = "fixed-top",
     tabPanel("OVERVIEW", icon = icon('map'),
              fluidRow(
-               column(
-                 8,
+               column(8,
                  h2(strong("Car Accidents in the U.S.")),
                  h4(
-                   "The data is gathered from 2.25 million US car accident records from Februrary 2016 to March 2019."
+                   "The data is gathered from 3 million US car accident records from Februrary 2016 to December 2019."
                  ),
                  htmlOutput("USmap")
                ),
-               column(
-                 3,
-                 br(),
+               column(3,
                  br(),
                  br(),
                  radioButtons(
                    "map",
                    label = h4(strong("Choose from:")),
-                   choices = list(
-                     "Count of Accidents" = "Count",
-                     "Accidents/Population (in %)" = "proportion"
-                   ),
-                   selected = "Count"
-                 ),
-                 htmlOutput("map_desc"),
-                 br(),
-                 br(),
-                 br(),
-                 br(),
-                 br(),
-                 br(),
-                 br(),
-                 br(),
+                   choices = list("Count of Accidents" = "Count",
+                                  "Accidents per capita (in %)" = "proportion"),selected = "Count"),
+                 tags$style(HTML(".js-irs-0 .irs-single, .js-irs-0 .irs-bar-edge, .js-irs-0 .irs-bar {
+                                                  background: #E84646;
+                                                  border-top: 1px solid #E84E4E ;
+                                                  border-bottom: 1px solid #E84E4E ;}
+                                 .irs-from, .irs-to, .irs-single { background: #E84646 }"
+                 )),
+                 sliderInput("year", label = h4("Year Range"), min = 2016, 
+                             max = 2019, value = c(2016, 2019), sep = ""),
+                 "Hover over the states to see more detail.",
+                 hr(),
                  wellPanel(style = "background: #E80000",
                            h4(strong(htmlOutput(
                              "top1"
@@ -66,19 +59,28 @@ fluidPage(
                  br()
                  #img(src="car_accident.jpg", width="320")
                ),
-               column(1, )
+               column(1, "")
              )),
+    
+    navbarMenu("EXPLORE",icon = icon("poll"),
     tabPanel(
-      "EXPLORE",
-      icon = icon('poll'),
+      "BY STATE",
       fluidRow(
         column(
           2,
           selectizeInput(
             inputId = "State",
-            label = h4(strong("Select a state:")),
-            choices = unique(data_2[, 'State'])
+            label = h5(strong("Select a state:")),
+            choices = states
           ),
+          tags$style(HTML(".js-irs-0 .irs-single, .js-irs-0 .irs-bar-edge, .js-irs-0 .irs-bar {
+                                                  background: #E84646;
+                                                  border-top: 1px solid #E84E4E ;
+                                                  border-bottom: 1px solid #E84E4E ;}
+                                 .irs-from, .irs-to, .irs-single { background: #E84646 }"
+          )),
+          sliderInput("year2", label = h5("Year Range"), min = 2016, 
+                      max = 2019, value = c(2019, 2019), sep = ""),
           wellPanel(style = "background: #E80000",
                     h4(strong(
                       htmlOutput("top1county")
@@ -93,7 +95,7 @@ fluidPage(
                     )))
         ),
         column(
-          9,
+          7,
           br(),
           h3(leafletOutput(
             "leaflet", width = 1050, height = 600
@@ -107,19 +109,20 @@ fluidPage(
       fluidRow(
         column(
           2,
+          h4(strong("MONTHLY VIEW")),
           radioButtons(
             "bar",
-            label = h4(strong("Choose from:")),
+            label = h5(strong("Choose from:")),
             choices = list(
               "Count of Accidents" = "Count",
-              "Accidents/Population (in %)" = "Proportion"
+              "Accidents per capita (in %)" = "Proportion"
             ),
             selected = "Count"
           ),
           hr(),
           checkboxGroupInput(
             "Severity",
-            label = h4(strong("Filter by severity:")),
+            label = h5(strong("Filter by severity:")),
             choices = (unique(sort(my_data$Severity))),
             selected = 0:4
           )
@@ -127,8 +130,7 @@ fluidPage(
         #selectizeInput(inputId = "humidity2",label = h5(strong("Humidity Level:")),
         #choices = unique(my_data %>% filter(!is.na(humidity)) %>% select(.,humidity2))),
         column(5,
-               plotOutput("bar"),
-               htmlOutput("bar_desc")),
+               plotOutput("bar")),
         column(5,
                plotOutput("bar2"))
       ),
@@ -136,7 +138,9 @@ fluidPage(
       fluidRow(
         column(
           2,
-          h4(strong("HEAT MAP")),
+          h4(strong("WEATHER CONDITIONS")),
+          br(),
+          h5(strong("HEAT MAP/DENSITY GRAPH")),
           selectizeInput(
             inputId = "var1",
             label = h5(strong("Select a variable:")),
@@ -146,35 +150,38 @@ fluidPage(
             inputId = "var2",
             label = h5(strong("Select another variable:")),
             choices = var_option
-          )
+          ),
+          # hr(),
+          # h5(strong("DENSITY GRAPH")),
+          # selectizeInput(
+          #   inputId = "density",
+          #   label = h5(strong("Select a variable:")),
+          #   choices = var_option
+          # )
         ),
-        column(9,
-               htmlOutput("heatmap_desc"),
-               plotOutput("heatmap"))
-      ),
-      hr(),
-      fluidRow(
-        column(2, align="left",
-               h4(strong("CAR ACCIDENTS")),
-               h4(strong("VS."),style="color:red;"),
-               h4(strong("INSURANCE PREMIUM"))),
-        column(8, align="left",
-               htmlOutput("insurance_desc"),
-               htmlOutput("insurance")
-               ),
-        column(2,"")
-        )),
+        column(5,
+               plotOutput("heatmap")),
+        column(5,
+               plotOutput("density"))
+      )),
+    tabPanel("ACCIDENTS VS INSURANCE",
+             fluidRow(align="center",
+                      h3("Car Accidents per capita vs. Car Insurance Premium"),
+                      "Numbers represent the annual average.",
+                      htmlOutput("insurance"),
+                      htmlOutput("insurance_desc")
+             ))),
     navbarMenu(
       "DATA",
       icon = icon("database"),
       tabPanel(
         "ACCIDENTS DATA",
         fluidRow(column(3,
-          "Dataset is very large with 2.25 million records. "),
+          "Dataset is very large with 3 million records. "),
           selectizeInput(
             inputId = "State2",
             label = h4(strong("Choose a state:")),
-            choices = unique(data_2[, 'State'])
+            choices = states
           )),
         fluidRow(
           uiOutput("url_kaggle", align="right"),
@@ -183,19 +190,21 @@ fluidPage(
         )
       ),
       tabPanel("POPULATION DATA",
+               br(),h4("POPULATION DATA"),br(),
                fluidRow(column(6,
                                uiOutput("url_population", align="left"),
                                hr(),
                  DT::dataTableOutput("table_population")
                ))),
       tabPanel("INSURANCE DATA",
+               br(),h4("INSURANCE DATA"),br(),
                fluidRow(column(6,
                                uiOutput("url_insurance"),
                                hr(),
                                DT::dataTableOutput("table_insurance"))))
     ),
     tabPanel(
-      "ABOUT ME/CONTACT",
+      "ABOUT ME", icon = icon("linkedin"),
       fluidRow(
         br(),
         img(src = "melanie.png", width = "17%", style = "display: block; margin-left: auto; margin-right: auto;")
@@ -248,12 +257,12 @@ fluidPage(
         column(
           6,
           h4(
-            "Currently a NYC Data Science fellow. Previously worked as a product manager at Viacom and project manager at Citigroup.",
+            "Currently a NYC Data Science fellow and CFA Exam Level III Candidate. Previously worked as a product manager at Viacom and project manager at Citigroup.",
             style = "text-align: left; line-height: 150%;"
           ),
           br(),
           h4(
-            "Working on Master's Degree in Computer Science with Machine Learning specialization at Georgia Institute of Technology and obtained the Bachelor's degree in Mathematics from the Baruch College, CUNY, in New York City.",
+            "Working on Master's Degree in Computer Science with Machine Learning specialization at Georgia Institute of Technology and obtained a Bachelor's degree in Mathematics from Baruch College, CUNY, in New York City.",
             style = "text-align: left; line-height: 150%;"
           ),
           br(),
@@ -263,21 +272,12 @@ fluidPage(
           ),
           br(),
           h4(
-            "Passionate about good food and good music. I love travelling, experiencing different culture and meeting new people :) ",
+            "Passionate about good food and good music. I love travelling, experiencing different cultures, and meeting new people :) ",
             style = "text-align: left; line-height: 150%;"
           )
         ),
         column(3, "")
       )
     )
-    #mainPanel(fluidRow(
-    #column(12,
-    #"Monthly Accident Data",
-    # fluidRow(
-    #  column(9,
-    #        htmlOutput("plot1")),
-    #  column(3,
-    #          htmlOutput("plot2"))
-    #  ))
-    # ))
+
   ))

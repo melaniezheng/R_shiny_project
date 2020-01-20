@@ -8,8 +8,8 @@ library(shinydashboard)
 shinyServer(function(input, output, session) {
   
   url_kaggle <- a("Kaggle", href="https://www.kaggle.com/sobhanmoosavi/us-accidents")
-  url_population <- a("Wikipedia", href="https://en.wikipedia.org/wiki/List_of_states_and_territories_of_the_United_States_by_population")
-  url_insurance <- a("insure.com", href="https://www.insure.com/car-insurance/car-insurance-rates.html")
+  url_population <- a("www.census.gov", href="https://www.census.gov/data/tables/time-series/demo/popest/2010s-state-total.html")
+  url_insurance <- a("www.insure.com", href="https://www.insure.com/car-insurance/car-insurance-rates.html")
 
   output$url_kaggle <- renderUI({
     tagList("Source:", url_kaggle)
@@ -31,23 +31,34 @@ shinyServer(function(input, output, session) {
       selected = var_option2[1])
   })
   
+  react_map <- reactive({
+    data_byStateYear %>% filter(between(year, input$year[1], input$year[2])) %>%
+      group_by(.,State, StateName) %>% 
+      summarise(.,Count=mean(Count), proportion=mean(proportion), Population=mean(Population))
+  })
+  
   react_state_selected <- reactive({
     my_data %>% filter(.,State == input$State)
   })
   
+  react_state_year_selected <- reactive({
+    react_state_selected() %>% filter(between(year, input$year2[1], input$year2[2]))
+  })
+  
   
   react_top3 <- reactive({
-    data_2 %>% 
+    react_map() %>% select(., -Population) %>% 
       gather(., key="Type", value="Number",c(Count,proportion)) %>% filter(., Type==input$map) %>% 
       arrange(.,desc(Number)) %>% top_n(.,3) %>% select(.,StateName)
   })
   
   react_topCounties <- reactive({
-    data_county %>% filter(.,State==input$State) %>% 
+    react_state_year_selected() %>% 
+      group_by(., State, County) %>% summarise(.,Count=n()) %>% 
       arrange(., desc(Count)) %>% top_n(.,3) 
   })
   
-  data_4 <- reactive({
+  day_night <- reactive({
     my_data %>%
       filter(.,State == input$State) %>% 
       filter(.,Severity %in% input$Severity) %>%
@@ -57,13 +68,6 @@ shinyServer(function(input, output, session) {
       group_by(., month,day_night) %>% summarise(.,Count=round(mean(count)), Proportion=round(mean(proportion),3)) 
   })
   
-  # react_plotVar_selected <- reactive({
-  #   my_data %>%
-  #     filter(., State == input$State) %>%
-  #     group_by(.,my_data[,"humidity"]) %>%
-  #     summarise(., Count=n()) %>% 
-  #     `colnames<-`(c("humidity", "Count"))
-  # })
   
   react_dt <- reactive({
     my_data %>% filter(.,State==input$State2)
@@ -94,7 +98,7 @@ shinyServer(function(input, output, session) {
   })
   
   output$top2 <- renderUI({ 
-    top2 <- react_top3()[2,]
+    top2 <- react_top3()[2,2]
     # HTML('&nbsp;') to add 1 whitespace and HTML('&emsp;') to add 1 tab space
     HTML(paste(
       p(HTML("NO.2:"),HTML('&nbsp;'),top2)
@@ -103,7 +107,7 @@ shinyServer(function(input, output, session) {
   })
   
   output$top3 <- renderUI({ 
-    top3 <- react_top3()[3,]
+    top3 <- react_top3()[3,2]
     # HTML('&nbsp;') to add 1 whitespace and HTML('&emsp;') to add 1 tab space
     HTML(paste(
       p(HTML("NO.3:"),HTML('&nbsp;'),top3)
@@ -147,7 +151,7 @@ shinyServer(function(input, output, session) {
   output$map_desc <- renderUI({ 
     # HTML('&nbsp;') to add 1 whitespace and HTML('&emsp;') to add 1 tab space
     HTML(paste(
-      p(HTML('&nbsp;'),HTML('&nbsp;'),"Hover over the map to see more detail.")
+      p(HTML('&nbsp;'),"Hover over the map to see more detail.")
     )
     )
   })
@@ -199,14 +203,14 @@ shinyServer(function(input, output, session) {
   # })
   
   output$leaflet <- renderLeaflet({
-    leaflet(react_state_selected()) %>% 
+    leaflet(react_state_year_selected()) %>% 
       #addPolygons(data=colState, stroke=F) %>% 
       addCircles(~Start_Lng, ~Start_Lat, color="#E82A2A") %>% 
       addProviderTiles('Esri.WorldStreetMap')
   })
   
   output$bar <- renderPlot({
-    ggplot(rbind(react_state_selected() %>% 
+    ggplot(rbind(react_state_selected() %>% filter(.,Severity %in% input$Severity) %>%
                    group_by(.,year, month, State) %>% 
                    summarise(.,count=n())%>% inner_join(.,population,by="State") %>% select(.,-StateName) %>% 
                    mutate(.,proportion=count/Population*100) %>% 
@@ -218,7 +222,7 @@ shinyServer(function(input, output, session) {
   })
   
   output$bar2 <- renderPlot({
-    ggplot(data_4(),
+    ggplot(day_night(),
            aes_string(x="month", y=input$bar,fill="day_night")) +
       geom_col(width = 0.5) +
       xlab("") + ylab("") + ggtitle(input$bar)
@@ -231,6 +235,18 @@ shinyServer(function(input, output, session) {
       ggtitle(input$var2)
       # theme(legend.position = "bottom")
   })
+  
+  output$density <- renderPlot({
+    ggplot(data=react_state_selected() %>% gather(., key="key", value="value", c(input$var1,input$var2))) + 
+      geom_density(aes(value, color=key), na.rm=T) +
+      facet_wrap(~key, scales = "free")+
+      labs(fill = "Weather Variables")+
+      theme(legend.position="right")
+  
+  })
+  
+  ggplot(my_data %>% filter(., State=="AL")) +
+    geom_density(aes_string("windspeed"), na.rm=T,color="#E87D7D")
   
   output$insurance <- renderGvis({
     gvisLineChart(
@@ -249,45 +265,15 @@ shinyServer(function(input, output, session) {
   
   output$USmap <- renderGvis({
     gvisGeoChart(
-      data_2,"State",input$map,
+      react_map(),"State",input$map,
       options = list(region = "US",displayMode = "regions",
                      resolution = "provinces",colors="['red']",width = 1000,height = 600))
   })
-  
-  # output$USmap2 <- renderGvis({
-  #   
-  #   library(googleVis)
-  #   test <- gvisGeoChart(data_County_geocode,"County","Count",
-  #                        options = list(region = "US-AL",displayMode = "regions",
-  #                                       resolution = "metros",colors="['red']",width = 1000,height = 600))
-  #   plot(test)
-  # })  
-  
-
-  # output$visibility <- renderGvis({
-  #   gvisColumnChart(
-  #     data_visibility,
-  #     options = list(title="Count of Accidents vs Visibility(in miles)",
-  #       width = "1000",height = "600",
-  #       hAxes="[{viewWindowMode:'explicit',viewWindow:{min:0, max:10}}]",
-  #       legend='none',bar="{groupWidth:'100%'}"
-  #     )
-  #   )
-  # })
   
   # output$pie <- renderGvis({
   #   gvisPieChart(data1 %>% select(.,month,count.avg.month), 
   #                options=list(width=500, height=550, title="Average Monthly Car Accidents (in %)"))
   # })
   
-  # output$gvis3 <- renderGvis({
-  #   gvisColumnChart(
-  #     data2,
-  #     options = list(
-  #       legend='none',width = 1200,height = 600,
-  #       axisTitlesPosition = "none",title = "Average Accidents Per Year"
-  #     )
-  #   )
-  # })
   
 })
