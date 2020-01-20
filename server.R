@@ -36,6 +36,7 @@ shinyServer(function(input, output, session) {
       group_by(.,State, StateName) %>% 
       summarise(.,Count=mean(Count), proportion=mean(proportion), Population=mean(Population))
   })
+
   
   react_state_selected <- reactive({
     my_data %>% filter(.,State == input$State)
@@ -47,7 +48,7 @@ shinyServer(function(input, output, session) {
   
   
   react_top3 <- reactive({
-    react_map() %>% select(., -Population) %>% 
+    react_map() %>%  ungroup() %>% select(., -Population) %>% 
       gather(., key="Type", value="Number",c(Count,proportion)) %>% filter(., Type==input$map) %>% 
       arrange(.,desc(Number)) %>% top_n(.,3) %>% select(.,StateName)
   })
@@ -63,7 +64,7 @@ shinyServer(function(input, output, session) {
       filter(.,State == input$State) %>% 
       filter(.,Severity %in% input$Severity) %>%
       group_by(.,year, month, State, day_night) %>% 
-      summarise(.,count=n())%>% inner_join(.,population,by="State") %>% select(.,-StateName) %>% 
+      summarise(.,count=n())%>% inner_join(.,population_raw,by=c("year","State")) %>%
       mutate(.,proportion=count/Population*100) %>% 
       group_by(., month,day_night) %>% summarise(.,Count=round(mean(count)), Proportion=round(mean(proportion),3)) 
   })
@@ -79,12 +80,12 @@ shinyServer(function(input, output, session) {
   })
   
   output$table_population <- DT::renderDataTable({
-    DT::datatable(population, rownames=FALSE) %>% 
+    DT::datatable(population_raw %>% mutate(.,Population=format(round(as.numeric(Population)), big.mark=",")), rownames=FALSE) %>% 
       DT::formatStyle("StateName",background="#E88E8E",fontWeight='bold')
   })
   
   output$table_insurance <- DT::renderDataTable({
-    DT::datatable(insurance, rownames=FALSE) %>% 
+    DT::datatable(insurance %>% mutate(.,Insurance=paste0("$", formatC(as.numeric(Insurance), big.mark=","))), rownames=FALSE) %>% 
       DT::formatStyle("StateName",background="#E88E8E",fontWeight='bold')
   })
 
@@ -98,7 +99,7 @@ shinyServer(function(input, output, session) {
   })
   
   output$top2 <- renderUI({ 
-    top2 <- react_top3()[2,2]
+    top2 <- react_top3()[2,"StateName"]
     # HTML('&nbsp;') to add 1 whitespace and HTML('&emsp;') to add 1 tab space
     HTML(paste(
       p(HTML("NO.2:"),HTML('&nbsp;'),top2)
@@ -107,7 +108,7 @@ shinyServer(function(input, output, session) {
   })
   
   output$top3 <- renderUI({ 
-    top3 <- react_top3()[3,2]
+    top3 <- react_top3()[3,"StateName"]
     # HTML('&nbsp;') to add 1 whitespace and HTML('&emsp;') to add 1 tab space
     HTML(paste(
       p(HTML("NO.3:"),HTML('&nbsp;'),top3)
@@ -212,10 +213,17 @@ shinyServer(function(input, output, session) {
   output$bar <- renderPlot({
     ggplot(rbind(react_state_selected() %>% filter(.,Severity %in% input$Severity) %>%
                    group_by(.,year, month, State) %>% 
-                   summarise(.,count=n())%>% inner_join(.,population,by="State") %>% select(.,-StateName) %>% 
+                   summarise(.,count=n())%>% inner_join(.,population_raw, by=c("year","State")) %>% 
                    mutate(.,proportion=count/Population*100) %>% 
-                   group_by(., month) %>% summarise(.,Count=round(mean(count)), Proportion=round(mean(proportion),3)) %>% 
-                   mutate(., type=input$State),data_USA)
+                   group_by(.,year,month) %>% summarise(avg=mean(count),avg_prop=mean(proportion)) %>% 
+                   group_by(.,month) %>% summarise(.,Count=round(mean(avg)), Proportion=round(mean(avg_prop),3)) %>% 
+                   mutate(., type=input$State),
+                 my_data %>% filter(.,Severity %in% input$Severity) %>% group_by(.,year,month,State) %>% summarise(.,count=n()) %>% 
+                   inner_join(.,population_raw, by=c("year","State")) %>% 
+                   mutate(., proportion=count/Population*100) %>% 
+                   group_by(.,year,month) %>% summarise(avg=mean(count),avg_prop=mean(proportion)) %>% 
+                   group_by(.,month) %>% summarise(.,Count=round(mean(avg)), Proportion=round(mean(avg_prop),3)) %>% 
+                   mutate(., type="USA"))
            , aes_string(x="month", y=input$bar,fill="type")) +
       geom_col(position="dodge", width = 0.5) +
       xlab("") + ylab("") + ggtitle(input$bar)

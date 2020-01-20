@@ -71,7 +71,7 @@ fluidPage(
           selectizeInput(
             inputId = "State",
             label = h5(strong("Select a state:")),
-            choices = states
+            choices = unique(data_state$State)
           ),
           tags$style(HTML(".js-irs-0 .irs-single, .js-irs-0 .irs-bar-edge, .js-irs-0 .irs-bar {
                                                   background: #E84646;
@@ -181,7 +181,7 @@ fluidPage(
           selectizeInput(
             inputId = "State2",
             label = h4(strong("Choose a state:")),
-            choices = states
+            choices = unique(data_state$State)
           )),
         fluidRow(
           uiOutput("url_kaggle", align="right"),

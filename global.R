@@ -42,22 +42,14 @@ kInsurance <- round(mean(insurance$Insurance))
 my_data <- fread(file = "US_Accidents.csv", stringsAsFactors = FALSE)
 my_data <- my_data %>% mutate(.,month=factor(month.abb[as.integer(month)], levels=month.abb, ordered = T))
 
-colState <- map("state", fill=T, plot=F,
-                region=states)  # for leaflet
-
-# data_byYearMon <- my_data %>% filter(., State=="AL") %>% 
-#   group_by(., State, year, month) %>% summarise(., Count=n()) %>% 
-#   left_join(., population, by="State") %>% 
-#   mutate(., proportion=Count/Population)
+#colState <- map("state", fill=T, plot=F, region=states)  # for leaflet
 
 data_USA <- my_data %>% group_by(.,year,month,State) %>% summarise(.,count=n()) %>% 
-  inner_join(.,population,by="State") %>% select(.,-StateName) %>% 
-  mutate(.,proportion=count/Population*100) %>% 
-  group_by(year, month) %>% summarise(avg=mean(count), avg_prop=mean(proportion)) %>%
-  group_by(.,month) %>% summarise(.,Count=round(mean(avg)), Proportion=round(mean(avg_prop),3)) %>%
+  inner_join(.,population_raw, by=c("year","State")) %>% 
+  mutate(., proportion=round(count/Population*100,3)) %>% 
+  group_by(.,year,month) %>% summarise(avg=mean(count),avg_prop=mean(proportion)) %>% 
+  group_by(.,month) %>% summarise(.,Count=round(mean(avg)), Proportion=round(mean(avg_prop),3)) %>% 
   mutate(., type="USA")
-
-k_proportion=mean(data_USA$Proportion)
 
 insurance_USA <- data_USA %>% group_by(.,type) %>% summarise(.,Count=round(mean(Count)), proportion=mean(Proportion))
 insurance_USA$Insurance=as.integer(kInsurance)
@@ -72,26 +64,7 @@ data_byStateYear <- my_data %>%
 data_state <- data_byStateYear %>% 
   group_by(.,State, StateName) %>% 
   summarise(.,Count=mean(Count), Population=mean(Population), proportion=mean(proportion))
-states <- unique(data_state$State)
 
-# df <- my_data %>%
-#   filter(., State == "AL") %>%
-#   group_by(.,as.character(my_data[,"humidity"])) %>%
-#   summarise(., Count=n()) %>% 
-#   `colnames<-`(c("humidity", "Count"))
-# ggplot(df, aes_string(x="humidity",y="Count"))+geom_point(na.rm=T)
-
-# data_state_insurance <- my_data %>% #filter(.,State=="AL") %>%
-#   group_by(.,State,year) %>% summarise(.,count=n()) %>%
-#   group_by(.,State) %>% summarise(.,Count=round(mean(count))) %>%
-#   left_join(., population, by="State") %>%
-#   mutate(.,proportion=round(Count/Population*100,3)) %>%
-#   left_join(.,insurance, by="StateName") %>%
-#   select(.,State,Count,proportion,Insurance) %>%
-#   rename(., type=State)
-
-# df <- as.data.frame(rbind(as.data.frame(data_state %>% select),insurance_USA) %>%
-#                       mutate(.,n=1:50)) %>% rename(., Accidents=proportion)
 
 data_state_insurance2 <- data_state %>% left_join(.,insurance, by="StateName") %>%
   select(.,State,Count,proportion,Insurance) %>%
