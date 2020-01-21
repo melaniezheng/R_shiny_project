@@ -51,6 +51,20 @@ data_USA <- my_data %>% group_by(.,year,month,State) %>% summarise(.,count=n()) 
   group_by(.,month) %>% summarise(.,Count=round(mean(avg)), Proportion=round(mean(avg_prop),3)) %>% 
   mutate(., type="USA")
 
+
+  
+# ggplot(my_data %>% gather(., key="key", value="value", c("humidity","temperature"))) + 
+#   geom_freqpoly(aes(value, color=key), na.rm=T) +
+#   facet_wrap(~key, scales = "free")+
+#   labs(fill = "Weather Variables")+
+#   theme(legend.position="right")
+
+ggplot(my_data %>% gather(., key="key", value="value", c("humidity","temperature"))) +
+  geom_histogram(aes(value), color="white", fill="#E85E5E",na.rm=T) +
+  facet_wrap(~key, scales = "free")+
+  labs(fill = "Weather Variables")+
+  theme(legend.position="right")
+
 insurance_USA <- data_USA %>% group_by(.,type) %>% summarise(.,Count=round(mean(Count)), proportion=mean(Proportion))
 insurance_USA$Insurance=as.integer(kInsurance)
 

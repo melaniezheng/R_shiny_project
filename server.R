@@ -62,7 +62,8 @@ shinyServer(function(input, output, session) {
   day_night <- reactive({
     my_data %>%
       filter(.,State == input$State) %>% 
-      filter(.,Severity %in% input$Severity) %>%
+      filter(.,Severity %in% input$Severity) %>% 
+      filter(.,day_night %in% c('Day','Night')) %>% 
       group_by(.,year, month, State, day_night) %>% 
       summarise(.,count=n())%>% inner_join(.,population_raw,by=c("year","State")) %>%
       mutate(.,proportion=count/Population*100) %>% 
@@ -182,26 +183,7 @@ shinyServer(function(input, output, session) {
     )
     )
   })
-  # output$plot_desc <- renderUI({ 
-  #   HTML(
-  #     p("Discover the correlation between the count of accident and different variables")
-  #   )
-  # })
-  
-  # output$plot <- renderPlot({
-  #   ggplot(react_plotVar_selected() %>% mutate_all(., function(x) {as.integer(x)}),
-  #          aes_string("humidity","Count")) +
-  #     geom_point(na.rm=T, color='#E86E6E') +
-  #     ylab("") + ggtitle("Count")
-  # })
 
-  # output$plot2 <- renderGvis({
-  #   gvisScatterChart(react_plotVar_selected()[,c(input$bar,"Count"), drop=FALSE],
-  #                    options = list(title=input$bar,
-  #                                   width = "500",height = "500",#colors: "['#E86E6E']",
-  #                                   legend='none')
-  #                    )
-  # })
   
   output$leaflet <- renderLeaflet({
     leaflet(react_state_year_selected()) %>% 
