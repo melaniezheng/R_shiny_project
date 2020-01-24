@@ -121,9 +121,7 @@ fluidPage(
                plotOutput("bar")),
         column(5,
                plotOutput("bar2"))
-      ),
-      hr(),
-      ),
+      )),
     tabPanel("VARIABLES",
              fluidRow(
                column(

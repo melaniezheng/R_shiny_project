@@ -47,12 +47,6 @@ shinyServer(function(input, output, session) {
       filter(between(Date, input$daterange[1], input$daterange[2]))
   })
   
-  react_state_date_severity_selected <- reactive({
-    react_state_selected() %>% mutate(., Date=as.Date(Date)) %>% filter(.,Severity %in% input$Severity) %>% 
-      filter(between(Date, input$daterange[1], input$daterange[2]))
-  })
-
-  
   react_top3 <- reactive({
     react_map() %>%  ungroup() %>% select(., -Population) %>% 
       gather(., key="Type", value="Number",c(Count,proportion)) %>% filter(., Type==input$map) %>% 
@@ -69,6 +63,7 @@ shinyServer(function(input, output, session) {
     my_data %>%
       filter(.,State == input$State) %>% 
       filter(.,Severity %in% input$Severity) %>% 
+      filter(between(year, input$year2[1], input$year2[2])) %>% 
       filter(.,day_night %in% c('Day','Night')) %>% 
       group_by(.,year, month, State, day_night) %>% 
       summarise(.,count=n())%>% inner_join(.,population_raw,by=c("year","State")) %>%
@@ -201,14 +196,14 @@ shinyServer(function(input, output, session) {
                    group_by(.,year,month) %>% summarise(avg=mean(count),avg_prop=mean(proportion)) %>% 
                    group_by(.,month) %>% summarise(.,Count=round(mean(avg)), Proportion=round(mean(avg_prop),3)) %>% 
                    mutate(., type=input$State),
-                 my_data %>% filter(.,Severity %in% input$Severity) %>% filter(between(year, input$year2[1], input$year2[2])) %>%
+                 my_data %>% filter(.,Severity %in% input$Severity) %>% 
+                   filter(between(year, input$year2[1], input$year2[2])) %>%
                    group_by(.,year,month,State) %>% summarise(.,count=n()) %>% 
                    inner_join(.,population_raw, by=c("year","State")) %>% 
                    mutate(., proportion=count/Population*100) %>% 
                    group_by(.,year,month) %>% summarise(avg=mean(count),avg_prop=mean(proportion)) %>% 
                    group_by(.,month) %>% summarise(.,Count=round(mean(avg)), Proportion=round(mean(avg_prop),3)) %>% 
-                   mutate(., type="USA"))
-           , aes_string(x="month", y=input$bar,fill="type")) +
+                   mutate(., type="USA")), aes_string(x="month", y=input$bar,fill="type")) +
       geom_col(position="dodge", width = 0.5) +
       xlab("") + ylab("") + ggtitle(input$bar)
   })
@@ -221,13 +216,13 @@ shinyServer(function(input, output, session) {
   })
   
   output$heatmap <- renderPlot({
-    ggplot(data=react_state_date_severity_selected()) + 
+    ggplot(data=react_state_year_selected()) + 
       geom_bin2d(aes_string(input$var1,input$var2),na.rm =T) +
       scale_fill_gradient(low="#E8B5B5", high="#E80000") + xlab(input$var1) + ylab(input$var2)
   })
   
   output$density <- renderPlot({
-    ggplot(data=react_state_date_severity_selected() %>% gather(., key="key", value="value", c(input$var1,input$var2))) + 
+    ggplot(data=react_state_year_selected() %>% gather(., key="key", value="value", c(input$var1,input$var2))) + 
       geom_density(aes(value, color=key), na.rm=T) +
       facet_wrap(~key, scales = "free")+
       labs(fill = "Weather Variables")+
@@ -260,7 +255,7 @@ shinyServer(function(input, output, session) {
   })
   
   output$timeseries <- renderGvis({
-    gvisAnnotationChart(as.data.frame(react_state_date_severity_selected() %>% group_by(., Date, State) %>% summarise(.,Count=n()) %>% 
+    gvisAnnotationChart(as.data.frame(react_state_year_selected() %>% group_by(., Date, State) %>% summarise(.,Count=n()) %>% 
                                         mutate(., Count=as.numeric(Count), Day=as.character(weekdays(as.Date(Date))),
                                                Is.Sunday=ifelse(Day %in% c("Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"),"", "Sunday"))) %>% 
                           filter(., State==input$State), 

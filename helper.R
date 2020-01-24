@@ -13,7 +13,7 @@ my_data <- data %>%
          -Description, -Number, -End_Time, -Source, -ID,-End_Lat, -End_Lng, -`Distance(mi)`, -TMC, -Start_Time, -Zipcode,
          -Country)
 
-write.csv(my_data, "~/NYCDSA/R_shiny_project/US_Accidents.csv", row.names = F)
+write.csv(my_data, "US_Accidents.csv", row.names = F)
 
 
 
