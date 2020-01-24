@@ -34,18 +34,24 @@ shinyServer(function(input, output, session) {
   react_map <- reactive({
     data_byStateYear %>% filter(between(year, input$year[1], input$year[2])) %>%
       group_by(.,State, StateName) %>% 
-      summarise(.,Count=mean(Count), proportion=mean(proportion), Population=mean(Population))
+      summarise(.,Count=round(sum(Count)), proportion=sum(proportion), Population=mean(Population))
   })
 
   
   react_state_selected <- reactive({
-    my_data %>% filter(.,State == input$State)
+    my_data %>% filter(.,State == input$State) %>% filter(.,Severity %in% input$Severity) 
   })
   
   react_state_year_selected <- reactive({
-    react_state_selected() %>% filter(between(year, input$year2[1], input$year2[2]))
+    react_state_selected() %>% mutate(., Date=as.Date(Date)) %>% 
+      filter(between(Date, input$daterange[1], input$daterange[2]))
   })
   
+  react_state_date_severity_selected <- reactive({
+    react_state_selected() %>% mutate(., Date=as.Date(Date)) %>% filter(.,Severity %in% input$Severity) %>% 
+      filter(between(Date, input$daterange[1], input$daterange[2]))
+  })
+
   
   react_top3 <- reactive({
     react_map() %>%  ungroup() %>% select(., -Population) %>% 
@@ -101,7 +107,6 @@ shinyServer(function(input, output, session) {
   
   output$top2 <- renderUI({ 
     top2 <- react_top3()[2,"StateName"]
-    # HTML('&nbsp;') to add 1 whitespace and HTML('&emsp;') to add 1 tab space
     HTML(paste(
       p(HTML("NO.2:"),HTML('&nbsp;'),top2)
     )
@@ -110,7 +115,6 @@ shinyServer(function(input, output, session) {
   
   output$top3 <- renderUI({ 
     top3 <- react_top3()[3,"StateName"]
-    # HTML('&nbsp;') to add 1 whitespace and HTML('&emsp;') to add 1 tab space
     HTML(paste(
       p(HTML("NO.3:"),HTML('&nbsp;'),top3)
     )
@@ -120,7 +124,6 @@ shinyServer(function(input, output, session) {
   output$top1county <- renderUI({ 
     top1 <- react_topCounties()[1,"County"]
     cnt <- react_topCounties()[1,"Count"]
-    # HTML('&nbsp;') to add 1 whitespace and HTML('&emsp;') to add 1 tab space
     HTML(paste(
       p(HTML("NO.1:"),HTML('&nbsp;'),top1, HTML("<br />"),
         HTML("Count:"), HTML('&nbsp;'), cnt)
@@ -142,7 +145,6 @@ shinyServer(function(input, output, session) {
   output$top3county <- renderUI({ 
     top3 <- react_topCounties()[3,"County"]
     cnt <- react_topCounties()[3,"Count"]
-    # HTML('&nbsp;') to add 1 whitespace and HTML('&emsp;') to add 1 tab space
     HTML(paste(
       p(HTML("NO.3:"),HTML('&nbsp;'),top3, HTML("<br />"),
         HTML("Count:"), HTML('&nbsp;'), cnt)
@@ -151,7 +153,6 @@ shinyServer(function(input, output, session) {
   })
   
   output$map_desc <- renderUI({ 
-    # HTML('&nbsp;') to add 1 whitespace and HTML('&emsp;') to add 1 tab space
     HTML(paste(
       p(HTML('&nbsp;'),"Hover over the map to see more detail.")
     )
@@ -187,20 +188,21 @@ shinyServer(function(input, output, session) {
   
   output$leaflet <- renderLeaflet({
     leaflet(react_state_year_selected()) %>% 
-      #addPolygons(data=colState, stroke=F) %>% 
       addCircles(~Start_Lng, ~Start_Lat, color="#E82A2A") %>% 
       addProviderTiles('Esri.WorldStreetMap')
   })
   
   output$bar <- renderPlot({
-    ggplot(rbind(react_state_selected() %>% filter(.,Severity %in% input$Severity) %>%
+    ggplot(rbind(react_state_selected() %>% 
+                   filter(between(year, input$year2[1], input$year2[2])) %>%
                    group_by(.,year, month, State) %>% 
                    summarise(.,count=n())%>% inner_join(.,population_raw, by=c("year","State")) %>% 
                    mutate(.,proportion=count/Population*100) %>% 
                    group_by(.,year,month) %>% summarise(avg=mean(count),avg_prop=mean(proportion)) %>% 
                    group_by(.,month) %>% summarise(.,Count=round(mean(avg)), Proportion=round(mean(avg_prop),3)) %>% 
                    mutate(., type=input$State),
-                 my_data %>% filter(.,Severity %in% input$Severity) %>% group_by(.,year,month,State) %>% summarise(.,count=n()) %>% 
+                 my_data %>% filter(.,Severity %in% input$Severity) %>% filter(between(year, input$year2[1], input$year2[2])) %>%
+                   group_by(.,year,month,State) %>% summarise(.,count=n()) %>% 
                    inner_join(.,population_raw, by=c("year","State")) %>% 
                    mutate(., proportion=count/Population*100) %>% 
                    group_by(.,year,month) %>% summarise(avg=mean(count),avg_prop=mean(proportion)) %>% 
@@ -219,15 +221,13 @@ shinyServer(function(input, output, session) {
   })
   
   output$heatmap <- renderPlot({
-    ggplot(data=react_state_selected()) + 
+    ggplot(data=react_state_date_severity_selected()) + 
       geom_bin2d(aes_string(input$var1,input$var2),na.rm =T) +
-      scale_fill_gradient(low="#E8B5B5", high="#E80000") + xlab(input$var1) + ylab("") + 
-      ggtitle(input$var2)
-      # theme(legend.position = "bottom")
+      scale_fill_gradient(low="#E8B5B5", high="#E80000") + xlab(input$var1) + ylab(input$var2)
   })
   
   output$density <- renderPlot({
-    ggplot(data=react_state_selected() %>% gather(., key="key", value="value", c(input$var1,input$var2))) + 
+    ggplot(data=react_state_date_severity_selected() %>% gather(., key="key", value="value", c(input$var1,input$var2))) + 
       geom_density(aes(value, color=key), na.rm=T) +
       facet_wrap(~key, scales = "free")+
       labs(fill = "Weather Variables")+
@@ -243,8 +243,7 @@ shinyServer(function(input, output, session) {
       df[, c("type", "Accidents", "Insurance")],
       "type",c("Accidents", "Insurance"),
       options = list(
-        width = "1000px",
-        height = "600px",
+        width="1150px", height="400px",
         series = "[{targetAxisIndex: 0},{targetAxisIndex:1}]",
         hAxe = "{title:'States'}",
         vAxes = "[{title:'Car Accident Per Capita (in %)'}, {title:'Insurance ($)'}]"
@@ -258,6 +257,17 @@ shinyServer(function(input, output, session) {
       react_map(),"State",input$map,
       options = list(region = "US",displayMode = "regions",
                      resolution = "provinces",colors="['red']",width = 1000,height = 600))
+  })
+  
+  output$timeseries <- renderGvis({
+    gvisAnnotationChart(as.data.frame(react_state_date_severity_selected() %>% group_by(., Date, State) %>% summarise(.,Count=n()) %>% 
+                                        mutate(., Count=as.numeric(Count), Day=as.character(weekdays(as.Date(Date))),
+                                               Is.Sunday=ifelse(Day %in% c("Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"),"", "Sunday"))) %>% 
+                          filter(., State==input$State), 
+                        datevar = "Date", numvar="Count",annotationvar = "Is.Sunday",#idvar="Day",
+                        options=list(displayAnnotations=TRUE,
+                                     legendPosition='newRow',
+                                     width=1150, height=400))
   })
   
   # output$pie <- renderGvis({

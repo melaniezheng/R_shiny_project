@@ -8,25 +8,7 @@ library(googleVis)
 library(maps)
 library(leaflet)
 
-
-var_option <- c("temperature", "windchill", "humidity", "pressure", "visibility", "windspeed", 
-                "precipitation")
-
-# pre-process data and save to .csv. original dataset is 800MB which is too large for shiny app.
-# data <- fread(file = "~/NYCDSA/R_shiny_project/US_Accidents_Dec19.csv", stringsAsFactors = FALSE)
-
-# my_data <- data %>%
-#   mutate(.,year=substr(Start_Time,1,4),month=substr(Start_Time,6,7)) %>%
-#   rename(., day_night=Sunrise_Sunset, temperature=`Temperature(F)`, windchill=`Wind_Chill(F)`,
-#          pressure=`Pressure(in)`, visibility=`Visibility(mi)`, windspeed=`Wind_Speed(mph)`,
-#          precipitation=`Precipitation(in)`, humidity=`Humidity(%)`) %>%
-#   select(., -Turning_Loop, -Civil_Twilight, -Nautical_Twilight, -Astronomical_Twilight, -Railway, -Roundabout,
-#          -Station, -Stop, -Traffic_Calming, -Traffic_Signal, -No_Exit, -Junction, -Give_Way, -Crossing, -Bump,
-#          -Amenity, -Timezone, -Airport_Code, -Weather_Condition, -Wind_Direction, -Weather_Timestamp, -Street, -Side,
-#          -Description, -Number, -End_Time, -Source, -ID,-End_Lat, -End_Lng, -`Distance(mi)`, -TMC, -Start_Time, -Zipcode,
-#          -Country)
-
-# write.csv(my_data, "~/NYCDSA/R_shiny_project/US_Accidents.csv", row.names = F)
+var_option <- c("temperature","humidity","windchill","pressure","visibility","windspeed","precipitation")
 
 #population data per state
 population_raw <- fread(file="population_2016to2019.csv", stringsAsFactors = F, header = T)
@@ -59,11 +41,11 @@ data_USA <- my_data %>% group_by(.,year,month,State) %>% summarise(.,count=n()) 
 #   labs(fill = "Weather Variables")+
 #   theme(legend.position="right")
 
-ggplot(my_data %>% gather(., key="key", value="value", c("humidity","temperature"))) +
-  geom_histogram(aes(value), color="white", fill="#E85E5E",na.rm=T) +
-  facet_wrap(~key, scales = "free")+
-  labs(fill = "Weather Variables")+
-  theme(legend.position="right")
+# ggplot(my_data %>% gather(., key="key", value="value", c("humidity","temperature"))) +
+#   geom_histogram(aes(value), color="white", fill="#E85E5E",na.rm=T) +
+#   facet_wrap(~key, scales = "free")+
+#   labs(fill = "Weather Variables")+
+#   theme(legend.position="right")
 
 insurance_USA <- data_USA %>% group_by(.,type) %>% summarise(.,Count=round(mean(Count)), proportion=mean(Proportion))
 insurance_USA$Insurance=as.integer(kInsurance)
@@ -86,3 +68,16 @@ data_state_insurance2 <- data_state %>% left_join(.,insurance, by="StateName") %
 
 df <- as.data.frame(rbind(as.data.frame(data_state_insurance2),insurance_USA)) %>%
                       mutate(.,n=1:50) %>% rename(., Accidents=proportion)
+
+# daily <- as.data.frame(my_data %>% group_by(., Date, State) %>%
+#                          summarise(.,Count=n()) %>% mutate(., Count=as.numeric(Count),
+#                                                            Day=as.character(weekdays(as.Date(Date))),
+#                                                            Is.Weekend=ifelse(Day %in% c("Monday", "Tuesday", "Wednesday", "Thursday", "Friday"),
+#                                                                           "Weekday", "Weekend")))
+
+# timeseries <- gvisAnnotationChart(daily %>% filter(., State %in% c("CA")),
+#                     datevar = "Date", numvar="Count",# annotationvar = "Is.Weekend",#idvar="Day",
+#                     options=list(displayAnnotations=TRUE,
+#                                  legendPosition='newRow',
+#                                  width=1150, height=400))
+# plot(timeseries)
