@@ -36,10 +36,7 @@ data_state <- data_byStateYear %>%
   summarise(.,Count=mean(Count), Population=mean(Population), proportion=mean(proportion))
 
 
-data_state_insurance2 <- data_state %>% left_join(.,insurance, by="StateName") %>%
-  select(.,State,Count,proportion,Insurance) %>%
-  rename(.,type=State)
-
-df <- as.data.frame(data_state_insurance2) %>%
+df <- as.data.frame(data_state %>% left_join(.,insurance, by="StateName") %>%
+                      select(.,State,Count,proportion,Insurance) %>%
+                      rename(.,type=State)) %>%
   mutate(.,n=1:49) %>% rename(., Accidents=proportion)
-

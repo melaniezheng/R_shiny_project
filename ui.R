@@ -108,9 +108,7 @@ fluidPage(
       )),
     tabPanel("SUMMARY",
       fluidRow(column(2,
-          br(),
-          sliderInput("year2", label = h5(strong("Select a Year Range for the monthly summary:")), min = 2017, 
-                      max = 2019, value = c(2017, 2019), sep = ""),
+          br(),br(),"Monthly Average is calculated using data from 2017 to 2019.",br(),
           radioButtons(
             "bar",
             label = h5(strong("Choose from:")),
@@ -118,9 +116,11 @@ fluidPage(
             selected = "Count")
         ),
         column(5,
-               plotOutput("bar")),
+               plotOutput("bar")
+               ),
         column(5,
-               plotOutput("bar2"))
+               plotOutput("bar2")
+               )
       )),
     tabPanel("VARIABLES",
              fluidRow(

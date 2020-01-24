@@ -46,6 +46,28 @@ shinyServer(function(input, output, session) {
     react_state_selected() %>% mutate(., Date=as.Date(Date)) %>% 
       filter(between(Date, input$daterange[1], input$daterange[2]))
   })
+  # react_bar_usa <- reactive({
+  #   
+  # })
+  
+  # react_bar_df <- reactive({
+  #   rbind(
+  #     react_state_selected() %>%
+  #       group_by(., year, month, State) %>%
+  #       summarise(., count = n()) %>% inner_join(., population_raw, by =c("year", "State")) %>%
+  #       mutate(., proportion = count / Population * 100) %>%
+  #       group_by(., year, month) %>% summarise(avg = mean(count), avg_prop =mean(proportion)) %>%
+  #       group_by(., month) %>% summarise(., Count = round(mean(avg)), Proportion =round(mean(avg_prop), 3)) %>%
+  #       mutate(., type = input$State),
+  #     my_data %>% filter(., Severity %in% input$Severity) %>%
+  #       group_by(., year, month, State) %>% summarise(., count = n()) %>%
+  #       inner_join(., population_raw, by = c("year", "State")) %>%
+  #       mutate(., proportion = count / Population * 100) %>%
+  #       group_by(., year, month) %>% summarise(avg = mean(count), avg_prop =mean(proportion)) %>%
+  #       group_by(., month) %>% summarise(., Count = round(mean(avg)), Proportion =round(mean(avg_prop), 3)) %>%
+  #       mutate(., type = "USA")
+  #   )
+  # })
   
   react_top3 <- reactive({
     react_map() %>%  ungroup() %>% select(., -Population) %>% 
@@ -59,17 +81,16 @@ shinyServer(function(input, output, session) {
       arrange(., desc(Count)) %>% top_n(.,3) 
   })
   
-  day_night <- reactive({
+  reactive_bar_df <- reactive({
     my_data %>%
       filter(.,State == input$State) %>% 
       filter(.,Severity %in% input$Severity) %>% 
-      filter(between(year, input$year2[1], input$year2[2])) %>% 
       filter(.,day_night %in% c('Day','Night')) %>% 
       group_by(.,year, month, State, day_night) %>% 
       summarise(.,count=n())%>% inner_join(.,population_raw,by=c("year","State")) %>%
-      mutate(.,proportion=count/Population*100) %>% 
-      group_by(., month,day_night) %>% summarise(.,Count=round(mean(count)), Proportion=round(mean(proportion),3)) 
+      mutate(.,proportion=count/Population*100) 
   })
+  
   
   
   react_dt <- reactive({
@@ -188,33 +209,34 @@ shinyServer(function(input, output, session) {
   })
   
   output$bar <- renderPlot({
-    ggplot(rbind(react_state_selected() %>% 
-                   filter(between(year, input$year2[1], input$year2[2])) %>%
-                   group_by(.,year, month, State) %>% 
-                   summarise(.,count=n())%>% inner_join(.,population_raw, by=c("year","State")) %>% 
-                   mutate(.,proportion=count/Population*100) %>% 
-                   group_by(.,year,month) %>% summarise(avg=mean(count),avg_prop=mean(proportion)) %>% 
-                   group_by(.,month) %>% summarise(.,Count=round(mean(avg)), Proportion=round(mean(avg_prop),3)) %>% 
-                   mutate(., type=input$State),
-                 my_data %>% filter(.,Severity %in% input$Severity) %>% 
-                   filter(between(year, input$year2[1], input$year2[2])) %>%
-                   group_by(.,year,month,State) %>% summarise(.,count=n()) %>% 
-                   inner_join(.,population_raw, by=c("year","State")) %>% 
-                   mutate(., proportion=count/Population*100) %>% 
-                   group_by(.,year,month) %>% summarise(avg=mean(count),avg_prop=mean(proportion)) %>% 
-                   group_by(.,month) %>% summarise(.,Count=round(mean(avg)), Proportion=round(mean(avg_prop),3)) %>% 
-                   mutate(., type="USA")), aes_string(x="month", y=input$bar,fill="type")) +
+    ggplot(rbind(
+      react_state_selected() %>%
+        group_by(., year, month, State) %>%
+        summarise(., count = n()) %>% inner_join(., population_raw, by =c("year", "State")) %>%
+        mutate(., proportion = count / Population * 100) %>%
+        group_by(., year, month) %>% summarise(avg = mean(count), avg_prop =mean(proportion)) %>%
+        group_by(., month) %>% summarise(., Count = round(mean(avg)), Proportion =round(mean(avg_prop), 3)) %>%
+        mutate(., type = input$State),
+      my_data %>% filter(., Severity %in% input$Severity) %>%
+        group_by(., year, month, State) %>% summarise(., count = n()) %>%
+        inner_join(., population_raw, by = c("year", "State")) %>%
+        mutate(., proportion = count / Population * 100) %>%
+        group_by(., year, month) %>% summarise(avg = mean(count), avg_prop =mean(proportion)) %>%
+        group_by(., month) %>% summarise(., Count = round(mean(avg)), Proportion =round(mean(avg_prop), 3)) %>%
+        mutate(., type = "USA")
+    ) ,aes_string(x="month", y=input$bar, fill="type")) +
       geom_col(position="dodge", width = 0.5) +
       xlab("") + ylab("") + ggtitle(input$bar)
   })
-  
+
   output$bar2 <- renderPlot({
-    ggplot(day_night(),
+    ggplot(reactive_bar_df() %>% group_by(., month,day_night) %>% 
+             summarise(.,Count=round(mean(count)), Proportion=round(mean(proportion),3)) ,
            aes_string(x="month", y=input$bar,fill="day_night")) +
       geom_col(width = 0.5) +
       xlab("") + ylab("") + ggtitle(input$bar)
   })
-  
+
   output$heatmap <- renderPlot({
     ggplot(data=react_state_year_selected()) + 
       geom_bin2d(aes_string(input$var1,input$var2),na.rm =T) +
