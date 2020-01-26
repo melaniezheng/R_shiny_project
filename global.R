@@ -28,7 +28,7 @@ my_data <- my_data %>% mutate(.,month=factor(month.abb[as.integer(month)], level
 data_byStateYear <- my_data %>% 
   group_by(.,State, year) %>% summarise(.,Count=n()) %>% 
   inner_join(.,population_raw,by=c("State","year")) %>% 
-  mutate(.,proportion=round(Count/Population*100,3)) 
+  mutate(.,proportion=round(Count/Population*1000,2)) 
 
 
 data_state <- data_byStateYear %>% 
@@ -40,3 +40,7 @@ df <- as.data.frame(data_state %>% left_join(.,insurance, by="StateName") %>%
                       select(.,State,Count,proportion,Insurance) %>%
                       rename(.,type=State)) %>%
   mutate(.,n=1:49) %>% rename(., Accidents=proportion)
+
+
+
+

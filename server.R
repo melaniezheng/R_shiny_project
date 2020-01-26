@@ -88,7 +88,7 @@ shinyServer(function(input, output, session) {
       filter(.,day_night %in% c('Day','Night')) %>% 
       group_by(.,year, month, State, day_night) %>% 
       summarise(.,count=n())%>% inner_join(.,population_raw,by=c("year","State")) %>%
-      mutate(.,proportion=count/Population*100) 
+      mutate(.,proportion=count/Population*1000) 
   })
   
   
@@ -213,16 +213,16 @@ shinyServer(function(input, output, session) {
       react_state_selected() %>%
         group_by(., year, month, State) %>%
         summarise(., count = n()) %>% inner_join(., population_raw, by =c("year", "State")) %>%
-        mutate(., proportion = count / Population * 100) %>%
+        mutate(., proportion = round(count/Population*1000,2)) %>%
         group_by(., year, month) %>% summarise(avg = mean(count), avg_prop =mean(proportion)) %>%
-        group_by(., month) %>% summarise(., Count = round(mean(avg)), Proportion =round(mean(avg_prop), 3)) %>%
+        group_by(., month) %>% summarise(., Count = round(mean(avg)), Proportion =round(mean(avg_prop),2)) %>%
         mutate(., type = input$State),
       my_data %>% filter(., Severity %in% input$Severity) %>%
         group_by(., year, month, State) %>% summarise(., count = n()) %>%
         inner_join(., population_raw, by = c("year", "State")) %>%
-        mutate(., proportion = count / Population * 100) %>%
+        mutate(., proportion = round(count/Population*1000,2)) %>%
         group_by(., year, month) %>% summarise(avg = mean(count), avg_prop =mean(proportion)) %>%
-        group_by(., month) %>% summarise(., Count = round(mean(avg)), Proportion =round(mean(avg_prop), 3)) %>%
+        group_by(., month) %>% summarise(., Count = round(mean(avg)), Proportion =round(mean(avg_prop),2)) %>%
         mutate(., type = "USA")
     ) ,aes_string(x="month", y=input$bar, fill="type")) +
       geom_col(position="dodge", width = 0.5) +
@@ -231,7 +231,7 @@ shinyServer(function(input, output, session) {
 
   output$bar2 <- renderPlot({
     ggplot(reactive_bar_df() %>% group_by(., month,day_night) %>% 
-             summarise(.,Count=round(mean(count)), Proportion=round(mean(proportion),3)) ,
+             summarise(.,Count=round(mean(count)), Proportion=round(mean(proportion),2)) ,
            aes_string(x="month", y=input$bar,fill="day_night")) +
       geom_col(width = 0.5) +
       xlab("") + ylab("") + ggtitle(input$bar)
@@ -244,8 +244,8 @@ shinyServer(function(input, output, session) {
   })
   
   output$density <- renderPlot({
-    ggplot(data=react_state_year_selected() %>% gather(., key="key", value="value", c(input$var1,input$var2))) + 
-      geom_density(aes(value, color=key), na.rm=T) +
+    ggplot(data=react_state_year_selected() %>% gather(., key="key", value="value", c(input$var1,input$var2)),aes(value)) + 
+      geom_histogram(aes(fill=key),na.rm=T, color="#EAE9E9",stat='bin', binwidth = 5) +
       facet_wrap(~key, scales = "free")+
       labs(fill = "Weather Variables")+
       theme(legend.position="right")

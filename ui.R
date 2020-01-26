@@ -29,6 +29,7 @@ fluidPage(
                  h4(
                    "The map aggregates 2.6 million US car accident records from January 2017 to December 2019."
                  ),
+                 "excluding Hawaii and Alaska.",
                  htmlOutput("USmap")),
                column(3,
                  br(),
@@ -37,7 +38,7 @@ fluidPage(
                    "map",
                    label = h4("CHOOSE FROM:"),
                    choices = list("Count of Accidents" = "Count",
-                                  "Accidents per capita (in %)" = "proportion"),selected = "Count"),
+                                  "Accidents per 1k residents" = "proportion"),selected = "Count"),
                  sliderInput("year", label = h4("YEAR RANGE"), min = 2017, 
                              max = 2019, value = c(2017, 2019), sep = ""),
                  "Hover over the states to see more detail.",
@@ -108,12 +109,13 @@ fluidPage(
       )),
     tabPanel("SUMMARY",
       fluidRow(column(2,
-          br(),br(),"Monthly Average is calculated using data from 2017 to 2019.",br(),
+          br(),br(),br(),
           radioButtons(
             "bar",
             label = h5(strong("Choose from:")),
-            choices = list("Count of Accidents" = "Count","Accidents per capita (in %)" = "Proportion"),
-            selected = "Count")
+            choices = list("Count of Accidents" = "Count","Accidents per 1k residents" = "Proportion"),
+            selected = "Count"),
+          br(),br(),br(),"Monthly Average is calculated using data from 2017 to 2019.",
         ),
         column(5,
                plotOutput("bar")

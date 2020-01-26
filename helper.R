@@ -1,3 +1,7 @@
+library(data.table)
+library(dplyr)
+library(tidyr)
+
 # pre-process data and save to .csv. original dataset is 1GB which is too large for shiny app.
 data <- fread(file = "US_Accidents_Dec19.csv", stringsAsFactors = FALSE)
 
