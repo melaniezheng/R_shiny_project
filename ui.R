@@ -1,8 +1,5 @@
 library(shiny)
-library(googleVis)
 library(shinythemes)
-library(shinydashboard)
-
 
 fluidPage(
   theme = shinytheme("journal"),
@@ -108,14 +105,20 @@ fluidPage(
           style = "text-align: right;"))
       )),
     tabPanel("SUMMARY",
-      fluidRow(column(2,
-          br(),br(),br(),
+      fluidRow(
+        column(2,
+          br(),
+          br(),
+          br(),
           radioButtons(
             "bar",
             label = h5(strong("Choose from:")),
             choices = list("Count of Accidents" = "Count","Accidents per 1k residents" = "Proportion"),
             selected = "Count"),
-          br(),br(),br(),"Monthly Average is calculated using data from 2017 to 2019.",
+          br(),
+          br(),
+          br(),
+          "Monthly Average is calculated using data from 2017 to 2019.",
         ),
         column(5,
                plotOutput("bar")
@@ -130,7 +133,8 @@ fluidPage(
                  2,
                  br(),
                  "How does weather affect the occurance of the accidents?",
-                 br(),br(),
+                 br(),
+                 br(),
                  h5(strong("HEAT MAP/DENSITY GRAPH")),
                  selectizeInput(
                    inputId = "var1",
